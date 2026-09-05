@@ -1,3 +1,9 @@
+## [1.0.0-rc.9](https://github.com/armandwipangestu/fiber-boilerplate/compare/v1.0.0-rc.8...v1.0.0-rc.9) (2026-09-05)
+
+### ✨ Features
+
+* stamp semantic-release version into binaries and expose it ([44f62fa](https://github.com/armandwipangestu/fiber-boilerplate/commit/44f62fa985f81b0499c6c6e94020894777bc49de))
+
 ## [1.0.0-rc.8](https://github.com/armandwipangestu/fiber-boilerplate/compare/v1.0.0-rc.7...v1.0.0-rc.8) (2026-09-05)
 
 ### 🧹 Chores
