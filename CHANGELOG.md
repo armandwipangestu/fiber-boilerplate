@@ -1,3 +1,9 @@
+## [1.0.0-rc.5](https://github.com/armandwipangestu/fiber-boilerplate/compare/v1.0.0-rc.4...v1.0.0-rc.5) (2026-09-05)
+
+### ✨ Features
+
+* object storage with S3 and local fallback, avatar upload ([966c8a9](https://github.com/armandwipangestu/fiber-boilerplate/commit/966c8a98c31f5ec253de478563c5c9373bd53f92))
+
 ## [1.0.0-rc.4](https://github.com/armandwipangestu/fiber-boilerplate/compare/v1.0.0-rc.3...v1.0.0-rc.4) (2026-09-05)
 
 ### ✨ Features
