@@ -93,9 +93,10 @@ func main() {
 	store := storage.New(*cfg, logger)
 
 	userRepo := user.NewPostgresRepository(db)
-	rbacSvc := rbac.NewService(db, rbac.NewCache(cacheStore))
-	userSvc := user.NewServiceWithStorage(userRepo, rbacSvc, store)
 	validator := pkg.NewValidator()
+	rbacSvc := rbac.NewService(db, rbac.NewCache(cacheStore))
+	rbacHandler := rbac.NewHandler(rbacSvc, validator)
+	userSvc := user.NewServiceWithStorage(userRepo, rbacSvc, store)
 	userHandler := user.NewHandler(userSvc, validator)
 
 	sessionRepo := auth.NewPostgresRefreshTokenRepository(db)
@@ -106,6 +107,7 @@ func main() {
 		UserHandler:    userHandler,
 		AuthHandler:    authHandler,
 		HealthHandler:  healthHandler,
+		RBACHandler:    rbacHandler,
 		AuthMiddleware: middleware.NewAuthMiddleware(*cfg),
 		RBACService:    rbacSvc,
 		Logger:         logger,
