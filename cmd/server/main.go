@@ -8,12 +8,15 @@ import (
 	"github.com/armandwipangestu/fiber-boilerplate/internal/auth"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/config"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/database"
+	"github.com/armandwipangestu/fiber-boilerplate/internal/health"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/logging"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/middleware"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/pkg"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/rbac"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/server"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/user"
+
+	"github.com/redis/go-redis/v9"
 )
 
 func main() {
@@ -46,6 +49,19 @@ func main() {
 	}
 	defer db.Close()
 
+	var rdb *redis.Client
+	if cfg.RedisURL != "" {
+		opts, err2 := redis.ParseURL(cfg.RedisURL)
+		if err2 != nil {
+			logger.Error("failed to parse redis url", "error", err2)
+			os.Exit(1)
+		}
+		rdb = redis.NewClient(opts)
+		defer rdb.Close()
+	}
+
+	healthHandler := health.NewHandler(db, rdb)
+
 	userRepo := user.NewPostgresRepository(db)
 	rbacSvc := rbac.NewService(db, rbac.NewInMemoryCache())
 	userSvc := user.NewService(userRepo, rbacSvc)
@@ -59,6 +75,7 @@ func main() {
 	app := server.New(*cfg, server.Dependencies{
 		UserHandler:    userHandler,
 		AuthHandler:    authHandler,
+		HealthHandler:  healthHandler,
 		AuthMiddleware: middleware.NewAuthMiddleware(*cfg),
 		RBACService:    rbacSvc,
 		Logger:         logger,
