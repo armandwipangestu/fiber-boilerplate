@@ -13,6 +13,7 @@ import (
 	"github.com/armandwipangestu/fiber-boilerplate/internal/health"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/metrics"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/middleware"
+	"github.com/armandwipangestu/fiber-boilerplate/internal/pkg"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/rbac"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/user"
 )
@@ -62,6 +63,12 @@ func New(cfg config.Config, deps Dependencies) *fiber.App {
 	// Health & liveness
 	app.Get("/ping", func(c *fiber.Ctx) error {
 		return c.JSON(map[string]any{"message": "pong"})
+	})
+
+	// Build/release version (stamped by the release pipeline, falls back to
+	// the VCS revision for dev builds).
+	app.Get("/version", func(c *fiber.Ctx) error {
+		return c.JSON(map[string]any{"app": cfg.AppName, "version": pkg.EffectiveVersion()})
 	})
 	if deps.HealthHandler != nil {
 		app.Get("/health", deps.HealthHandler.Health)

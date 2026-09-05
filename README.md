@@ -123,7 +123,8 @@ OpenAPI docs are generated from source annotations and served at
 
 Health probes: `GET /health/live` (liveness — always 200), `GET /health/ready`
 and `GET /health` (readiness — 503 when dependencies are down). Metrics:
-`GET /metrics`.
+`GET /metrics`. Version: `GET /version` (also shown on startup and printable
+with `server -version`).
 
 ### Auth — `POST /api/v1/auth`
 
@@ -197,6 +198,31 @@ task lint        # go vet
 - Live integration checks (cache, RBAC) auto-skip when Redis/Postgres at
   `localhost:6379/15` / `localhost:5433` are unreachable.
 
+## Downloads — single binaries
+
+Every versioned [GitHub Release](https://github.com/armandwipangestu/fiber-boilerplate/releases)
+carries prebuilt, ready-to-run binaries for six platforms — no Go toolchain
+required:
+
+```
+fiber-boilerplate_<version>_linux_amd64.tar.gz    fiber-boilerplate_<version>_darwin_amd64.tar.gz
+fiber-boilerplate_<version>_linux_arm64.tar.gz    fiber-boilerplate_<version>_darwin_arm64.tar.gz
+fiber-boilerplate_<version>_windows_amd64.zip     fiber-boilerplate_<version>_windows_arm64.zip
+```
+
+Pick the one matching your machine (`.sha256` checksums included), extract,
+`chmod +x fiber-boilerplate`, and run:
+
+```bash
+./fiber-boilerplate -version        # print the release version
+./fiber-boilerplate migrate up       # apply migrations
+APP_ENV=production DATABASE_URL=... JWT_SECRET=... ./fiber-boilerplate
+```
+
+The version is stamped from the semantic-release tag, and is also exposed at
+`GET /version` and in the startup log. Unstamped (dev / Docker) builds fall
+back to a `dev-<commit>` identifier.
+
 ## Docker & task runner
 
 ```bash
@@ -223,8 +249,9 @@ on `/health/live` and bundles `migrations/` for in-container `migrate`.
 - **Docker build** — Buildx image build with layer caching
 
 The existing semantic-release pipeline (`release.yml`) versions and ships
-the image to GHCR/Docker Hub on merge. The full roadmap log lives in
-`docs/phases` — one document per feature phase.
+the image to GHCR/Docker Hub on merge, and attaches cross-compiled binaries
+(linux/darwin/windows × amd64/arm64) to every GitHub Release. The full
+roadmap log lives in `docs/phases` — one document per feature phase.
 
 ## License
 
