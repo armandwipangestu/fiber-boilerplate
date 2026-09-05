@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log/slog"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -18,6 +19,7 @@ type Dependencies struct {
 	AuthHandler    *auth.Handler
 	AuthMiddleware fiber.Handler
 	RBACService    *rbac.Service
+	Logger         *slog.Logger
 }
 
 // New builds and configures the Fiber application with core middleware.
@@ -28,9 +30,15 @@ func New(cfg config.Config, deps Dependencies) *fiber.App {
 		BodyLimit:         10 * 1024 * 1024, // 10MB
 	})
 
+	logger := deps.Logger
+	if logger == nil {
+		logger = slog.Default()
+	}
+
 	app.Use(middleware.RequestID())
 	app.Use(middleware.SecurityHeaders())
 	app.Use(middleware.NewCORSMiddleware(cfg))
+	app.Use(middleware.NewLoggingMiddleware(logger))
 
 	if rateLimit, err := middleware.NewRateLimitMiddleware(cfg); err != nil {
 		panic(err) // misconfiguration, fail fast

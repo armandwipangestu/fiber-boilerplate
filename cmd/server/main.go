@@ -61,6 +61,7 @@ func main() {
 		AuthHandler:    authHandler,
 		AuthMiddleware: middleware.NewAuthMiddleware(*cfg),
 		RBACService:    rbacSvc,
+		Logger:         logger,
 	})
 
 	addr := cfg.AppHost + ":" + formatPort(cfg.AppPort)
