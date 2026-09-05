@@ -66,3 +66,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# Generated swag precompiled docs (swagger.json serves the UI at runtime)
+docs/swagger/docs.go
