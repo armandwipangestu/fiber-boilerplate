@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -15,9 +16,11 @@ import (
 	"github.com/armandwipangestu/fiber-boilerplate/internal/rbac"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/server"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/storage"
+	"github.com/armandwipangestu/fiber-boilerplate/internal/tracing"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/user"
 
 	"github.com/redis/go-redis/v9"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
 func main() {
@@ -59,6 +62,20 @@ func main() {
 		}
 		rdb = redis.NewClient(opts)
 		defer rdb.Close()
+	}
+
+	var tracerProvider *sdktrace.TracerProvider
+	if cfg.OTELEnabled {
+		tracerProvider, err = tracing.Init(cfg.AppName, cfg.OTELEndpoint, cfg.OTELSampleRate)
+		if err != nil {
+			logger.Error("failed to initialize tracing, continuing without it", "error", err)
+		} else {
+			defer tracing.Shutdown(context.Background(), tracerProvider)
+			logger.Info("tracing enabled",
+				"endpoint", cfg.OTELEndpoint,
+				"sample_rate", cfg.OTELSampleRate,
+			)
+		}
 	}
 
 	healthHandler := health.NewHandler(db, rdb)
