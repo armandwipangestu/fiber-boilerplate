@@ -1,3 +1,10 @@
+## [1.0.0-rc.7](https://github.com/armandwipangestu/fiber-boilerplate/compare/v1.0.0-rc.6...v1.0.0-rc.7) (2026-09-05)
+
+### ✨ Features
+
+* generic cache layer (in-memory + Redis) shared by RBAC ([669f8ee](https://github.com/armandwipangestu/fiber-boilerplate/commit/669f8ee8017f1caae9fbb8254551535e3537e84d))
+* role & permission management with cache invalidation ([736edd5](https://github.com/armandwipangestu/fiber-boilerplate/commit/736edd50d21dc9565a660780341711437eb3e032))
+
 ## [1.0.0-rc.6](https://github.com/armandwipangestu/fiber-boilerplate/compare/v1.0.0-rc.5...v1.0.0-rc.6) (2026-09-05)
 
 ### ✨ Features
