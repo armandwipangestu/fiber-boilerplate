@@ -2,26 +2,42 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 
 	"github.com/armandwipangestu/fiber-boilerplate/internal/config"
+	"github.com/armandwipangestu/fiber-boilerplate/internal/logging"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/server"
 )
 
 func main() {
 	cfg, err := config.Load()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to load config: %v\n", err)
+		slog.Error("failed to load config", "error", err)
 		os.Exit(1)
 	}
 
+	logger := logging.NewLogger(*cfg)
+	slog.SetDefault(logger)
+
 	app := server.New(*cfg)
 
-	addr := fmt.Sprintf("%s:%d", cfg.AppHost, cfg.AppPort)
-	log.Printf("Starting %s in %s mode on %s", cfg.AppName, cfg.AppEnv, addr)
+	addr := cfg.AppHost + ":" + formatPort(cfg.AppPort)
+	logger.Info("server starting",
+		"app", cfg.AppName,
+		"env", cfg.AppEnv,
+		"addr", addr,
+	)
 
 	if err := app.Listen(addr); err != nil {
-		log.Fatalf("server error: %v", err)
+		logger.Error("server error", "error", err)
+		os.Exit(1)
 	}
+}
+
+func formatPort(port int) string {
+	if port == 0 {
+		return "8080"
+	}
+	return fmt.Sprintf("%d", port)
 }
