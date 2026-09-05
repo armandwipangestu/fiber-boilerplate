@@ -3,8 +3,12 @@ module github.com/armandwipangestu/fiber-boilerplate
 go 1.25.4
 
 require (
+	github.com/gofiber/fiber/v2 v2.52.15
+	github.com/stretchr/testify v1.12.1
+)
+
+require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
-	github.com/gofiber/fiber/v2 v2.52.15 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -14,5 +18,6 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.51.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
+	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 )
