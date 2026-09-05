@@ -11,6 +11,9 @@ coverage.html
 # Logs
 logs/
 
+# Local storage (fallback when S3 is not configured)
+storage/
+
 # Docker data volumes
 docker-data/
 

@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/armandwipangestu/fiber-boilerplate/internal/pkg"
+	"github.com/armandwipangestu/fiber-boilerplate/internal/storage"
 )
 
 // RouteOptions carries the middleware needed to mount user routes.
@@ -39,6 +40,9 @@ func (h *Handler) RegisterRoutes(v1 fiber.Router, opts RouteOptions) {
 	users.Get("/:id", opts.RequireView, h.GetByID)
 	users.Patch("/:id", opts.RequireUpdate, h.Update)
 	users.Delete("/:id", opts.RequireDelete, h.Delete)
+
+	users.Post("/:id/avatar", opts.RequireUpdate, h.UploadAvatar)
+	users.Delete("/:id/avatar", opts.RequireUpdate, h.ClearAvatar)
 }
 
 // Create handles POST /users.
@@ -56,7 +60,7 @@ func (h *Handler) Create(c *fiber.Ctx) error {
 	if err != nil {
 		return pkg.Error(c, err)
 	}
-	return pkg.Created(c, toResponse(u))
+	return pkg.Created(c, h.resolveAvatar(u))
 }
 
 // List handles GET /users.
@@ -76,7 +80,7 @@ func (h *Handler) List(c *fiber.Ctx) error {
 
 	items := make([]UserResponse, 0, len(users))
 	for _, u := range users {
-		items = append(items, toResponse(u))
+		items = append(items, h.resolveAvatar(u))
 	}
 	return pkg.OK(c, ListUsersResponse{Items: items, Meta: meta})
 }
@@ -92,7 +96,7 @@ func (h *Handler) GetByID(c *fiber.Ctx) error {
 	if err != nil {
 		return pkg.Error(c, err)
 	}
-	return pkg.OK(c, toResponse(u))
+	return pkg.OK(c, h.resolveAvatar(u))
 }
 
 // Update handles PATCH /users/:id.
@@ -115,7 +119,7 @@ func (h *Handler) Update(c *fiber.Ctx) error {
 	if err != nil {
 		return pkg.Error(c, err)
 	}
-	return pkg.OK(c, toResponse(u))
+	return pkg.OK(c, h.resolveAvatar(u))
 }
 
 // Delete handles DELETE /users/:id.
@@ -132,14 +136,75 @@ func (h *Handler) Delete(c *fiber.Ctx) error {
 	return pkg.Message(c, fiber.StatusOK, "user deleted")
 }
 
+// UploadAvatar handles POST /users/:id/avatar (multipart field "avatar").
+func (h *Handler) UploadAvatar(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if !validID(id) {
+		return pkg.BadRequestResponse(c, "invalid user id")
+	}
+
+	file, err := c.FormFile("avatar")
+	if err != nil {
+		return pkg.BadRequestResponse(c, "multipart field 'avatar' is required")
+	}
+
+	if file.Size > 10*1024*1024 {
+		return pkg.BadRequestResponse(c, "avatar exceeds 10MB limit")
+	}
+
+	fh, err := file.Open()
+	if err != nil {
+		return pkg.BadRequestResponse(c, "could not read uploaded file")
+	}
+	defer fh.Close()
+
+	data := make([]byte, file.Size)
+	if _, err := fh.Read(data); err != nil {
+		return pkg.BadRequestResponse(c, "could not read uploaded file")
+	}
+
+	u, err := h.svc.SetAvatar(c.Context(), id, storage.UploadOptions{
+		Filename:    file.Filename,
+		ContentType: file.Header.Get("Content-Type"),
+		Data:        data,
+	})
+	if err != nil {
+		return pkg.Error(c, err)
+	}
+	return pkg.OK(c, h.resolveAvatar(u))
+}
+
+// ClearAvatar handles DELETE /users/:id/avatar.
+func (h *Handler) ClearAvatar(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if !validID(id) {
+		return pkg.BadRequestResponse(c, "invalid user id")
+	}
+
+	u, err := h.svc.ClearAvatar(c.Context(), id)
+	if err != nil {
+		return pkg.Error(c, err)
+	}
+	return pkg.OK(c, toResponse(u))
+}
+
 func toResponse(u *Domain) UserResponse {
 	return UserResponse{
 		ID:        u.ID,
 		Email:     u.Email,
 		Name:      u.Name,
+		AvatarURL: u.AvatarKey,
 		CreatedAt: u.CreatedAt,
 		UpdatedAt: u.UpdatedAt,
 	}
+}
+
+// resolveAvatar maps a user's avatar storage key to a public URL using the
+// handler's service.
+func (h *Handler) resolveAvatar(u *Domain) UserResponse {
+	resp := toResponse(u)
+	resp.AvatarURL = h.svc.ResolveURL(u.AvatarKey)
+	return resp
 }
 
 func validID(id string) bool {

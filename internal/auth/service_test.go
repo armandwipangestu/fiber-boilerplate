@@ -274,6 +274,10 @@ func (m *mockUserRepo) Update(ctx context.Context, u *user.Domain) (*user.Domain
 	return u, nil
 }
 
+func (m *mockUserRepo) UpdateAvatar(ctx context.Context, id, key string) (*user.Domain, error) {
+	return m.GetByID(ctx, id)
+}
+
 func (m *mockUserRepo) Delete(ctx context.Context, id string) error {
 	return nil
 }
