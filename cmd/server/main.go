@@ -29,6 +29,16 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
+// @title Fiber Boilerplate API
+// @version 1.0.0
+// @description A production-grade Fiber (Go) API boilerplate with auth, RBAC, storage, and observability.
+// @host localhost:8080
+// @BasePath /api/v1
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+
 func main() {
 	cfg, err := config.Load()
 	if err != nil {

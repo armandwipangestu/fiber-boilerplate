@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gofiber/adaptor/v2"
+	"github.com/gofiber/contrib/swagger"
 	"github.com/gofiber/fiber/v2"
 
 	"github.com/armandwipangestu/fiber-boilerplate/internal/auth"
@@ -76,6 +77,17 @@ func New(cfg config.Config, deps Dependencies) *fiber.App {
 	storageRoot := cfg.StoragePath
 	if storageRoot != "" {
 		app.Static("/uploads", storageRoot)
+	}
+
+	// Swagger UI (development only).
+	if cfg.SwaggerEnabled && cfg.AppEnv == "development" {
+		swaggerCfg := swagger.Config{
+			BasePath: "/",
+			FilePath: "./docs/swagger/swagger.json",
+			Path:     "swagger",
+			Title:    cfg.AppName,
+		}
+		app.Use(swagger.New(swaggerCfg))
 	}
 
 	api := app.Group("/api")

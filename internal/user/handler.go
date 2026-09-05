@@ -46,6 +46,17 @@ func (h *Handler) RegisterRoutes(v1 fiber.Router, opts RouteOptions) {
 }
 
 // Create handles POST /users.
+// @Summary Create a user (admin)
+// @Tags Users
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body CreateUserRequest true "User"
+// @Success 201 {object} UserResponse
+// @Failure 400 {object} map[string]any
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Router /users [post]
 func (h *Handler) Create(c *fiber.Ctx) error {
 	var req CreateUserRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -64,6 +75,17 @@ func (h *Handler) Create(c *fiber.Ctx) error {
 }
 
 // List handles GET /users.
+// @Summary List users with pagination
+// @Tags Users
+// @Security BearerAuth
+// @Produce json
+// @Param page query int false "Page" default(1)
+// @Param per_page query int false "Items per page" default(20)
+// @Param search query string false "Search by email or name"
+// @Success 200 {object} ListUsersResponse
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Router /users [get]
 func (h *Handler) List(c *fiber.Ctx) error {
 	query := ListUsersQuery{
 		Page:    queryInt(c, "page", 1),
@@ -86,6 +108,17 @@ func (h *Handler) List(c *fiber.Ctx) error {
 }
 
 // GetByID handles GET /users/:id.
+// @Summary Get a user by ID
+// @Tags Users
+// @Security BearerAuth
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200 {object} UserResponse
+// @Failure 400 {object} map[string]any
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Failure 404 {object} map[string]any
+// @Router /users/{id} [get]
 func (h *Handler) GetByID(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if !validID(id) {
@@ -100,6 +133,19 @@ func (h *Handler) GetByID(c *fiber.Ctx) error {
 }
 
 // Update handles PATCH /users/:id.
+// @Summary Update a user
+// @Tags Users
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Param request body UpdateUserRequest true "Fields to update"
+// @Success 200 {object} UserResponse
+// @Failure 400 {object} map[string]any
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Failure 404 {object} map[string]any
+// @Router /users/{id} [patch]
 func (h *Handler) Update(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if !validID(id) {
@@ -123,6 +169,16 @@ func (h *Handler) Update(c *fiber.Ctx) error {
 }
 
 // Delete handles DELETE /users/:id.
+// @Summary Delete a user
+// @Tags Users
+// @Security BearerAuth
+// @Param id path string true "User ID"
+// @Success 200 {object} map[string]any
+// @Failure 400 {object} map[string]any
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Failure 404 {object} map[string]any
+// @Router /users/{id} [delete]
 func (h *Handler) Delete(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if !validID(id) {
@@ -137,6 +193,18 @@ func (h *Handler) Delete(c *fiber.Ctx) error {
 }
 
 // UploadAvatar handles POST /users/:id/avatar (multipart field "avatar").
+// @Summary Upload or replace a user avatar
+// @Tags Users
+// @Security BearerAuth
+// @Accept multipart/form-data
+// @Produce json
+// @Param id path string true "User ID"
+// @Param avatar formData file true "Avatar image (max 10MB)"
+// @Success 200 {object} UserResponse
+// @Failure 400 {object} map[string]any
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Router /users/{id}/avatar [post]
 func (h *Handler) UploadAvatar(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if !validID(id) {
@@ -175,6 +243,15 @@ func (h *Handler) UploadAvatar(c *fiber.Ctx) error {
 }
 
 // ClearAvatar handles DELETE /users/:id/avatar.
+// @Summary Remove a user avatar
+// @Tags Users
+// @Security BearerAuth
+// @Param id path string true "User ID"
+// @Success 200 {object} UserResponse
+// @Failure 400 {object} map[string]any
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Router /users/{id}/avatar [delete]
 func (h *Handler) ClearAvatar(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if !validID(id) {
