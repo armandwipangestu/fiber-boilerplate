@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/gofiber/fiber/v2"
 
+	"github.com/armandwipangestu/fiber-boilerplate/internal/auth"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/config"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/middleware"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/user"
@@ -11,6 +12,7 @@ import (
 // Dependencies injected into the server by the composition root (main).
 type Dependencies struct {
 	UserHandler *user.Handler
+	AuthHandler *auth.Handler
 }
 
 // New builds and configures the Fiber application with core middleware.
@@ -33,6 +35,9 @@ func New(cfg config.Config, deps Dependencies) *fiber.App {
 
 	if deps.UserHandler != nil {
 		deps.UserHandler.RegisterRoutes(v1)
+	}
+	if deps.AuthHandler != nil {
+		deps.AuthHandler.RegisterRoutes(v1)
 	}
 
 	return app
