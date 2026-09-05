@@ -4,10 +4,12 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
 
 	"github.com/armandwipangestu/fiber-boilerplate/internal/auth"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/config"
+	"github.com/armandwipangestu/fiber-boilerplate/internal/metrics"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/middleware"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/rbac"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/user"
@@ -39,6 +41,7 @@ func New(cfg config.Config, deps Dependencies) *fiber.App {
 	app.Use(middleware.SecurityHeaders())
 	app.Use(middleware.NewCORSMiddleware(cfg))
 	app.Use(middleware.NewLoggingMiddleware(logger))
+	app.Use(middleware.NewMetricsMiddleware())
 
 	if rateLimit, err := middleware.NewRateLimitMiddleware(cfg); err != nil {
 		panic(err) // misconfiguration, fail fast
@@ -55,6 +58,9 @@ func New(cfg config.Config, deps Dependencies) *fiber.App {
 	app.Get("/ping", func(c *fiber.Ctx) error {
 		return c.JSON(map[string]any{"message": "pong"})
 	})
+
+	// Prometheus scrape endpoint
+	app.Get("/metrics", adaptor.HTTPHandler(metrics.Handler()))
 
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
