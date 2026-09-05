@@ -1120,6 +1120,27 @@
                     }
                 }
             }
+        },
+        "/version": {
+            "get": {
+                "description": "Returns the app name and the build version (stamped from the\nrelease pipeline, falls back to a dev-\u003ccommit\u003e identifier).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "Show build version",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {

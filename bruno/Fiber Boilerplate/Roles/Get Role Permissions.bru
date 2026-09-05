@@ -1,0 +1,20 @@
+meta {
+  name: Get Role Permissions
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{host}}/api/v1/roles/{{role_id}}/permissions
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{access_token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,26 @@
+meta {
+  name: Update Role
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{host}}/api/v1/roles/{{role_id}}
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{access_token}}
+}
+
+body:json {
+  {
+    "description": "Manages content and editors"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

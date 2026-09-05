@@ -1,0 +1,20 @@
+meta {
+  name: Delete Role
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{host}}/api/v1/roles/{{role_id}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{access_token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

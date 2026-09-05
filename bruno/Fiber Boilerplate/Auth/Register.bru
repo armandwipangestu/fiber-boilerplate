@@ -1,0 +1,37 @@
+meta {
+  name: Register
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{host}}/api/v1/auth/register
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "email": "{{register_email}}",
+    "name": "{{register_name}}",
+    "password": "{{register_password}}"
+  }
+}
+
+script:post-response {
+  const body = res.getBody();
+  const token = body?.data?.access_token;
+  const userId = body?.data?.user?.id;
+
+  if (token) {
+    bru.setEnvVar("access_token", token);
+  }
+  if (userId) {
+    bru.setEnvVar("user_id", userId);
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

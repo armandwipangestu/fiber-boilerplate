@@ -8,6 +8,7 @@ import (
 	"github.com/gofiber/contrib/swagger"
 	"github.com/gofiber/fiber/v2"
 
+	"github.com/armandwipangestu/fiber-boilerplate/docs"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/auth"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/config"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/health"
@@ -67,9 +68,7 @@ func New(cfg config.Config, deps Dependencies) *fiber.App {
 
 	// Build/release version (stamped by the release pipeline, falls back to
 	// the VCS revision for dev builds).
-	app.Get("/version", func(c *fiber.Ctx) error {
-		return c.JSON(map[string]any{"app": cfg.AppName, "version": pkg.EffectiveVersion()})
-	})
+	app.Get("/version", versionHandler(cfg))
 	if deps.HealthHandler != nil {
 		app.Get("/health", deps.HealthHandler.Health)
 		app.Get("/health/live", deps.HealthHandler.Live)
@@ -86,15 +85,22 @@ func New(cfg config.Config, deps Dependencies) *fiber.App {
 		app.Static("/uploads", storageRoot)
 	}
 
-	// Swagger UI (development only).
+	// Swagger UI (development only). The spec is embedded in the binary, so it
+	// works regardless of the working directory (go run, dev shell, download).
 	if cfg.SwaggerEnabled && cfg.AppEnv == "development" {
-		swaggerCfg := swagger.Config{
-			BasePath: "/",
-			FilePath: "./docs/swagger/swagger.json",
-			Path:     "swagger",
-			Title:    cfg.AppName,
+		spec, err := docs.SwaggerFS.ReadFile("swagger/swagger.json")
+		if err != nil {
+			logger.Error("embedded swagger spec missing", "error", err)
+		} else {
+			swaggerCfg := swagger.Config{
+				BasePath:    "/",
+				FilePath:    "docs/swagger/swagger.json",
+				FileContent: spec,
+				Path:        "swagger",
+				Title:       cfg.AppName,
+			}
+			app.Use(swagger.New(swaggerCfg))
 		}
-		app.Use(swagger.New(swaggerCfg))
 	}
 
 	api := app.Group("/api")
@@ -124,4 +130,18 @@ func New(cfg config.Config, deps Dependencies) *fiber.App {
 	}
 
 	return app
+}
+
+// versionHandler reports the running build's app name and version.
+// @Summary Show build version
+// @Description Returns the app name and the build version (stamped from the
+// @Description release pipeline, falls back to a dev-<commit> identifier).
+// @Tags System
+// @Produce json
+// @Success 200 {object} map[string]any
+// @Router /version [get]
+func versionHandler(cfg config.Config) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		return c.JSON(map[string]any{"app": cfg.AppName, "version": pkg.EffectiveVersion()})
+	}
 }

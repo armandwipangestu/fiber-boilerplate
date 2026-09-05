@@ -1,0 +1,20 @@
+meta {
+  name: Clear Avatar
+  type: http
+  seq: 7
+}
+
+delete {
+  url: {{host}}/api/v1/users/{{user_id}}/avatar
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{access_token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

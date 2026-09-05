@@ -1,0 +1,37 @@
+meta {
+  name: Create User
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{host}}/api/v1/users
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{access_token}}
+}
+
+body:json {
+  {
+    "email": "jane@example.com",
+    "name": "Jane Doe",
+    "password": "password123"
+  }
+}
+
+script:post-response {
+  const body = res.getBody();
+  const userId = body?.data?.id;
+
+  if (userId) {
+    bru.setEnvVar("user_id", userId);
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
