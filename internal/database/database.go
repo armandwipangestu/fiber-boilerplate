@@ -15,7 +15,7 @@ import (
 // NewDatabase opens a connection to the configured driver, applies pool
 // settings, and pings the database to verify connectivity.
 func NewDatabase(cfg config.Config) (*sql.DB, error) {
-	db, err := sql.Open(cfg.DatabaseDriver, cfg.DatabaseURL)
+	db, err := sql.Open(sqlDriverName(cfg.DatabaseDriver), cfg.DatabaseURL)
 	if err != nil {
 		return nil, fmt.Errorf("database open: %w", err)
 	}
@@ -34,4 +34,13 @@ func NewDatabase(cfg config.Config) (*sql.DB, error) {
 	}
 
 	return db, nil
+}
+
+// sqlDriverName maps the config driver value to a registered database/sql
+// driver name. "postgres" is served by the pgx stdlib adapter.
+func sqlDriverName(driver string) string {
+	if driver == "postgres" {
+		return "pgx"
+	}
+	return driver
 }

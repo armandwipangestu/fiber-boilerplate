@@ -8,7 +8,9 @@ import (
 	"github.com/armandwipangestu/fiber-boilerplate/internal/config"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/database"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/logging"
+	"github.com/armandwipangestu/fiber-boilerplate/internal/pkg"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/server"
+	"github.com/armandwipangestu/fiber-boilerplate/internal/user"
 )
 
 func main() {
@@ -34,7 +36,19 @@ func main() {
 	logger := logging.NewLogger(*cfg)
 	slog.SetDefault(logger)
 
-	app := server.New(*cfg)
+	db, err := database.NewDatabase(*cfg)
+	if err != nil {
+		logger.Error("failed to connect to database", "error", err)
+		os.Exit(1)
+	}
+	defer db.Close()
+
+	userRepo := user.NewPostgresRepository(db)
+	userSvc := user.NewService(userRepo, nil)
+	validator := pkg.NewValidator()
+	userHandler := user.NewHandler(userSvc, validator)
+
+	app := server.New(*cfg, server.Dependencies{UserHandler: userHandler})
 
 	addr := cfg.AppHost + ":" + formatPort(cfg.AppPort)
 	logger.Info("server starting",

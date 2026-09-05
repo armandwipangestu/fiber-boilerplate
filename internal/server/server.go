@@ -5,10 +5,16 @@ import (
 
 	"github.com/armandwipangestu/fiber-boilerplate/internal/config"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/middleware"
+	"github.com/armandwipangestu/fiber-boilerplate/internal/user"
 )
 
+// Dependencies injected into the server by the composition root (main).
+type Dependencies struct {
+	UserHandler *user.Handler
+}
+
 // New builds and configures the Fiber application with core middleware.
-func New(cfg config.Config) *fiber.App {
+func New(cfg config.Config, deps Dependencies) *fiber.App {
 	app := fiber.New(fiber.Config{
 		AppName:           cfg.AppName,
 		EnablePrintRoutes: false,
@@ -17,15 +23,17 @@ func New(cfg config.Config) *fiber.App {
 
 	app.Use(middleware.RequestID())
 
-	api := app.Group("/api")
-	v1 := api.Group("/v1")
-
 	// Health & liveness
 	app.Get("/ping", func(c *fiber.Ctx) error {
 		return c.JSON(map[string]any{"message": "pong"})
 	})
 
-	_ = v1
+	api := app.Group("/api")
+	v1 := api.Group("/v1")
+
+	if deps.UserHandler != nil {
+		deps.UserHandler.RegisterRoutes(v1)
+	}
 
 	return app
 }
