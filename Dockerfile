@@ -5,11 +5,15 @@ FROM golang:1.26-alpine AS build
 
 WORKDIR /src
 
+# Semantic version or commit SHA stamped into internal/pkg.Version at build
+# time (defaults to "dev").
+ARG VERSION=dev
+
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" \
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w -X github.com/armandwipangestu/fiber-boilerplate/internal/pkg.Version=${VERSION}" \
     -o /out/server ./cmd/server
 
 # ---- Runtime stage -------------------------------------------------------

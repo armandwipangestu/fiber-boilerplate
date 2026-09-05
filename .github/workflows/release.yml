@@ -41,6 +41,7 @@ jobs:
         run: |
           docker build \
             --platform linux/amd64 \
+            --build-arg VERSION=${SHORT_SHA} \
             -f Dockerfile \
             -t $GHCR_IMAGE:${{ env.SHORT_SHA }} \
             -t $DOCKERHUB_IMAGE:${{ env.SHORT_SHA }} .
@@ -189,3 +190,106 @@ jobs:
           docker tag $GHCR_IMAGE:${{ env.VERSION }} $DOCKERHUB_IMAGE:latest
           docker push $GHCR_IMAGE:latest
           docker push $DOCKERHUB_IMAGE:latest
+
+  # ------------------------------------------------------
+  # JOB 4 - BUILD & ATTACH VERSIONED BINARIES TO THE RELEASE
+  # ------------------------------------------------------
+  upload-binaries:
+    name: Binary ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    needs: release-and-tagging-version
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-amd64
+            goos: linux
+            goarch: amd64
+            ext: tar.gz
+          - target: linux-arm64
+            goos: linux
+            goarch: arm64
+            ext: tar.gz
+          - target: darwin-amd64
+            goos: darwin
+            goarch: amd64
+            ext: tar.gz
+          - target: darwin-arm64
+            goos: darwin
+            goarch: arm64
+            ext: tar.gz
+          - target: windows-amd64
+            goos: windows
+            goarch: amd64
+            ext: zip
+          - target: windows-arm64
+            goos: windows
+            goarch: arm64
+            ext: zip
+
+    steps:
+      - name: Download version.txt artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: release-version
+        continue-on-error: true # Prevents crash if no release happened
+
+      - name: Check if version exists
+        id: check-version
+        run: |
+          if [ -f "version.txt" ]; then
+              echo "VERSION=$(cat version.txt)" >> $GITHUB_ENV
+              echo "RELEASE_EXISTS=true" >> $GITHUB_OUTPUT
+          else
+              echo "No new version released. Skipping binary upload."
+              echo "RELEASE_EXISTS=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout repository
+        if: steps.check-version.outputs.RELEASE_EXISTS == 'true'
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        if: steps.check-version.outputs.RELEASE_EXISTS == 'true'
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Build binary
+        if: steps.check-version.outputs.RELEASE_EXISTS == 'true'
+        run: |
+          mkdir -p dist/staging
+          LDFLAGS="-s -w -X github.com/armandwipangestu/fiber-boilerplate/internal/pkg.Version=${VERSION}"
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+              CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
+                go build -trimpath -ldflags="${LDFLAGS}" \
+                -o dist/staging/fiber-boilerplate.exe ./cmd/server
+              ARTIFACT=fiber-boilerplate_${VERSION}_${{ matrix.goos }}_${{ matrix.goarch }}.${{ matrix.ext }}
+              (cd dist/staging && zip -q ../${ARTIFACT} fiber-boilerplate.exe)
+          else
+              CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
+                go build -trimpath -ldflags="${LDFLAGS}" \
+                -o dist/staging/fiber-boilerplate ./cmd/server
+              ARTIFACT=fiber-boilerplate_${VERSION}_${{ matrix.goos }}_${{ matrix.goarch }}.${{ matrix.ext }}
+              tar -C dist/staging -czf dist/${ARTIFACT} fiber-boilerplate
+          fi
+          echo "ARTIFACT=${ARTIFACT}" >> $GITHUB_ENV
+          echo "GOOS=${{ matrix.goos }}" >> $GITHUB_ENV
+          echo "GOARCH=${{ matrix.goarch }}" >> $GITHUB_ENV
+
+      - name: Checksum and report
+        if: steps.check-version.outputs.RELEASE_EXISTS == 'true'
+        run: |
+          sha256sum dist/${ARTIFACT} | tee dist/${ARTIFACT}.sha256
+          echo "### Ready" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${ARTIFACT}\`: $(cat dist/${ARTIFACT}.sha256 | awk '{print $1}')" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload binary to release
+        if: steps.check-version.outputs.RELEASE_EXISTS == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "v${VERSION}" dist/${ARTIFACT} dist/${ARTIFACT}.sha256 --clobber

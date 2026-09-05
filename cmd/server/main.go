@@ -12,6 +12,7 @@ import (
 	"github.com/armandwipangestu/fiber-boilerplate/internal/config"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/database"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/logging"
+	"github.com/armandwipangestu/fiber-boilerplate/internal/pkg"
 )
 
 // @title Fiber Boilerplate API
@@ -25,6 +26,15 @@ import (
 // @name Authorization
 
 func main() {
+	// CLI: print version before requiring any configuration or database.
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "-version", "--version", "version":
+			fmt.Println(pkg.EffectiveVersion())
+			os.Exit(0)
+		}
+	}
+
 	cfg, err := config.Load()
 	if err != nil {
 		slog.Error("failed to load config", "error", err)
@@ -57,6 +67,7 @@ func main() {
 	logger.Info("server starting",
 		"app", cfg.AppName,
 		"env", cfg.AppEnv,
+		"version", pkg.EffectiveVersion(),
 		"addr", addr,
 	)
 
