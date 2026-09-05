@@ -29,6 +29,8 @@ func New(cfg config.Config, deps Dependencies) *fiber.App {
 	})
 
 	app.Use(middleware.RequestID())
+	app.Use(middleware.SecurityHeaders())
+	app.Use(middleware.NewCORSMiddleware(cfg))
 
 	if rateLimit, err := middleware.NewRateLimitMiddleware(cfg); err != nil {
 		panic(err) // misconfiguration, fail fast
