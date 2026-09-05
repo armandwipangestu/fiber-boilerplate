@@ -40,8 +40,10 @@ func NewTracingMiddleware() fiber.Handler {
 		)
 		ctx = trace.ContextWithSpan(ctx, span)
 		spanCtx := span.SpanContext()
-		pkg.SetTraceID(c, spanCtx.TraceID().String())
-		pkg.SetSpanID(c, spanCtx.SpanID().String())
+		if spanCtx.IsValid() {
+			pkg.SetTraceID(c, spanCtx.TraceID().String())
+			pkg.SetSpanID(c, spanCtx.SpanID().String())
+		}
 
 		c.SetUserContext(ctx)
 
