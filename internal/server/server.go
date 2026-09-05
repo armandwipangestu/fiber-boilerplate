@@ -9,6 +9,7 @@ import (
 
 	"github.com/armandwipangestu/fiber-boilerplate/internal/auth"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/config"
+	"github.com/armandwipangestu/fiber-boilerplate/internal/health"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/metrics"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/middleware"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/rbac"
@@ -19,6 +20,7 @@ import (
 type Dependencies struct {
 	UserHandler    *user.Handler
 	AuthHandler    *auth.Handler
+	HealthHandler  *health.Handler
 	AuthMiddleware fiber.Handler
 	RBACService    *rbac.Service
 	Logger         *slog.Logger
@@ -58,6 +60,11 @@ func New(cfg config.Config, deps Dependencies) *fiber.App {
 	app.Get("/ping", func(c *fiber.Ctx) error {
 		return c.JSON(map[string]any{"message": "pong"})
 	})
+	if deps.HealthHandler != nil {
+		app.Get("/health", deps.HealthHandler.Health)
+		app.Get("/health/live", deps.HealthHandler.Live)
+		app.Get("/health/ready", deps.HealthHandler.Ready)
+	}
 
 	// Prometheus scrape endpoint
 	app.Get("/metrics", adaptor.HTTPHandler(metrics.Handler()))
