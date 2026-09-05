@@ -1,3 +1,17 @@
+## [1.0.0-rc.3](https://github.com/armandwipangestu/fiber-boilerplate/compare/v1.0.0-rc.2...v1.0.0-rc.3) (2026-09-05)
+
+### ✨ Features
+
+* authentication with JWT access/refresh token rotation ([ae1be19](https://github.com/armandwipangestu/fiber-boilerplate/commit/ae1be193aedab896fdc8d5b1dd15424280aae8c6))
+* CORS and security headers ([96e2a2d](https://github.com/armandwipangestu/fiber-boilerplate/commit/96e2a2dd8a922dd4561377f1b313861b76964c6b))
+* JWT authentication middleware for protected routes ([a375219](https://github.com/armandwipangestu/fiber-boilerplate/commit/a3752191eb22e67d3abd8feee6020b26db1b3963))
+* rate limiting and request throttling ([4a8cb91](https://github.com/armandwipangestu/fiber-boilerplate/commit/4a8cb91bf06bc67705b1d0eca3c8566f69474059))
+* RBAC with permission service, cache, and middleware ([da54927](https://github.com/armandwipangestu/fiber-boilerplate/commit/da54927ef4baeab32a76c997b542a30a41b07b30))
+* request logging middleware ([200a8e2](https://github.com/armandwipangestu/fiber-boilerplate/commit/200a8e2eb0ab2d1d0ee2c19d34a3858bc280cf8e))
+* user feature domain with repository and password hashing ([bbc1a43](https://github.com/armandwipangestu/fiber-boilerplate/commit/bbc1a432ab408b7ae6103c40326a3d9b8b57b734))
+* user feature service, handler, and wiring ([f2b9942](https://github.com/armandwipangestu/fiber-boilerplate/commit/f2b99427f3328efb9990ccc8584a17a32aca7540))
+* validation hardening with JSON field names and tests ([6d83aef](https://github.com/armandwipangestu/fiber-boilerplate/commit/6d83aef63591f1d44d2f9583baa1a1fcf0695e78))
+
 ## [1.0.0-rc.2](https://github.com/armandwipangestu/fiber-boilerplate/compare/v1.0.0-rc.1...v1.0.0-rc.2) (2026-09-05)
 
 ### ✨ Features
