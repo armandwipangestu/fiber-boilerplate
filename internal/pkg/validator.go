@@ -11,7 +11,7 @@ import (
 )
 
 // Validator validates structs against `validate` tags and returns field
-// errors keyed by field name, suitable for the response envelope.
+// errors keyed by JSON field name, suitable for the response envelope.
 type Validator interface {
 	ValidateStruct(s any) (map[string][]string, error)
 }
@@ -25,9 +25,19 @@ var (
 func NewValidator() Validator {
 	validateOnce.Do(func() {
 		validate = validator.New()
+		validate.RegisterTagNameFunc(jsonTagName)
 		_ = validate.RegisterValidation("uuid", isUUIDValue)
 	})
 	return &structValidator{}
+}
+
+// jsonTagName lets validator error field names follow the `json` tag.
+func jsonTagName(fld reflect.StructField) string {
+	name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+	if name == "" || name == "-" {
+		return fld.Name
+	}
+	return name
 }
 
 type structValidator struct{}
@@ -38,8 +48,7 @@ func (v *structValidator) ValidateStruct(s any) (map[string][]string, error) {
 		if verrs, ok := err.(validator.ValidationErrors); ok {
 			fields := make(map[string][]string, len(verrs))
 			for _, fe := range verrs {
-				field := strings.ToLower(fe.StructField())
-				fields[field] = append(fields[field], validationMessage(fe))
+				fields[fe.Field()] = append(fields[fe.Field()], validationMessage(fe))
 			}
 			return fields, fmt.Errorf("validation failed: %w", err)
 		}
@@ -60,6 +69,8 @@ func validationMessage(fe validator.FieldError) string {
 		return fmt.Sprintf("must be at least %s characters", fe.Param())
 	case "max":
 		return fmt.Sprintf("must be at most %s characters", fe.Param())
+	case "oneof":
+		return fmt.Sprintf("must be one of: %s", strings.ReplaceAll(fe.Param(), " ", ", "))
 	default:
 		return fmt.Sprintf("failed %s validation", fe.Tag())
 	}
