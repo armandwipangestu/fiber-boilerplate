@@ -11,6 +11,7 @@ import (
 	"github.com/armandwipangestu/fiber-boilerplate/internal/logging"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/middleware"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/pkg"
+	"github.com/armandwipangestu/fiber-boilerplate/internal/rbac"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/server"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/user"
 )
@@ -46,7 +47,8 @@ func main() {
 	defer db.Close()
 
 	userRepo := user.NewPostgresRepository(db)
-	userSvc := user.NewService(userRepo, nil)
+	rbacSvc := rbac.NewService(db, rbac.NewInMemoryCache())
+	userSvc := user.NewService(userRepo, rbacSvc)
 	validator := pkg.NewValidator()
 	userHandler := user.NewHandler(userSvc, validator)
 
@@ -58,6 +60,7 @@ func main() {
 		UserHandler:    userHandler,
 		AuthHandler:    authHandler,
 		AuthMiddleware: middleware.NewAuthMiddleware(*cfg),
+		RBACService:    rbacSvc,
 	})
 
 	addr := cfg.AppHost + ":" + formatPort(cfg.AppPort)

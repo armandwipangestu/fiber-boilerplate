@@ -9,6 +9,15 @@ import (
 	"github.com/armandwipangestu/fiber-boilerplate/internal/pkg"
 )
 
+// RouteOptions carries the middleware needed to mount user routes.
+type RouteOptions struct {
+	Auth          fiber.Handler
+	RequireCreate fiber.Handler
+	RequireView   fiber.Handler
+	RequireUpdate fiber.Handler
+	RequireDelete fiber.Handler
+}
+
 // Handler exposes the user feature over HTTP.
 type Handler struct {
 	svc      *Service
@@ -21,15 +30,15 @@ func NewHandler(svc *Service, validate pkg.Validator) *Handler {
 }
 
 // RegisterRoutes mounts the user endpoints under the given router group.
-// All users routes require a valid access token.
-func (h *Handler) RegisterRoutes(v1 fiber.Router, authMW fiber.Handler) {
-	users := v1.Group("/users", authMW)
+// All users routes require a valid access token plus a matching permission.
+func (h *Handler) RegisterRoutes(v1 fiber.Router, opts RouteOptions) {
+	users := v1.Group("/users", opts.Auth)
 
-	users.Post("/", h.Create)
-	users.Get("/", h.List)
-	users.Get("/:id", h.GetByID)
-	users.Patch("/:id", h.Update)
-	users.Delete("/:id", h.Delete)
+	users.Post("/", opts.RequireCreate, h.Create)
+	users.Get("/", opts.RequireView, h.List)
+	users.Get("/:id", opts.RequireView, h.GetByID)
+	users.Patch("/:id", opts.RequireUpdate, h.Update)
+	users.Delete("/:id", opts.RequireDelete, h.Delete)
 }
 
 // Create handles POST /users.
