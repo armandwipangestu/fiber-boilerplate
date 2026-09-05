@@ -5,10 +5,15 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/armandwipangestu/fiber-boilerplate/internal/auth"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/config"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/database"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/logging"
+	"github.com/armandwipangestu/fiber-boilerplate/internal/middleware"
+	"github.com/armandwipangestu/fiber-boilerplate/internal/pkg"
+	"github.com/armandwipangestu/fiber-boilerplate/internal/rbac"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/server"
+	"github.com/armandwipangestu/fiber-boilerplate/internal/user"
 )
 
 func main() {
@@ -34,7 +39,30 @@ func main() {
 	logger := logging.NewLogger(*cfg)
 	slog.SetDefault(logger)
 
-	app := server.New(*cfg)
+	db, err := database.NewDatabase(*cfg)
+	if err != nil {
+		logger.Error("failed to connect to database", "error", err)
+		os.Exit(1)
+	}
+	defer db.Close()
+
+	userRepo := user.NewPostgresRepository(db)
+	rbacSvc := rbac.NewService(db, rbac.NewInMemoryCache())
+	userSvc := user.NewService(userRepo, rbacSvc)
+	validator := pkg.NewValidator()
+	userHandler := user.NewHandler(userSvc, validator)
+
+	sessionRepo := auth.NewPostgresRefreshTokenRepository(db)
+	authSvc := auth.NewService(userRepo, sessionRepo, *cfg)
+	authHandler := auth.NewHandler(authSvc, validator)
+
+	app := server.New(*cfg, server.Dependencies{
+		UserHandler:    userHandler,
+		AuthHandler:    authHandler,
+		AuthMiddleware: middleware.NewAuthMiddleware(*cfg),
+		RBACService:    rbacSvc,
+		Logger:         logger,
+	})
 
 	addr := cfg.AppHost + ":" + formatPort(cfg.AppPort)
 	logger.Info("server starting",
