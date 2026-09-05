@@ -31,6 +31,15 @@ func (h *Handler) RegisterRoutes(v1 fiber.Router) {
 }
 
 // Register handles POST /auth/register.
+// @Summary Register a new user
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body RegisterRequest true "User credentials"
+// @Success 201 {object} AuthResponse
+// @Failure 400 {object} map[string]any
+// @Failure 422 {object} map[string]any
+// @Router /auth/register [post]
 func (h *Handler) Register(c *fiber.Ctx) error {
 	var req RegisterRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -49,6 +58,15 @@ func (h *Handler) Register(c *fiber.Ctx) error {
 }
 
 // Login handles POST /auth/login.
+// @Summary Login and obtain tokens
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body LoginRequest true "Credentials"
+// @Success 200 {object} AuthResponse
+// @Failure 400 {object} map[string]any
+// @Failure 401 {object} map[string]any
+// @Router /auth/login [post]
 func (h *Handler) Login(c *fiber.Ctx) error {
 	var req LoginRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -67,6 +85,12 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 }
 
 // Refresh handles POST /auth/refresh.
+// @Summary Refresh the access token using the httpOnly cookie
+// @Tags Auth
+// @Produce json
+// @Success 200 {object} AuthResponse
+// @Failure 401 {object} map[string]any
+// @Router /auth/refresh [post]
 func (h *Handler) Refresh(c *fiber.Ctx) error {
 	token := c.Cookies(refreshCookieName)
 	result, err := h.svc.Refresh(c.Context(), token)
@@ -78,6 +102,11 @@ func (h *Handler) Refresh(c *fiber.Ctx) error {
 }
 
 // Logout handles POST /auth/logout.
+// @Summary Revoke the refresh token and log out
+// @Tags Auth
+// @Success 204 "No Content"
+// @Failure 401 {object} map[string]any
+// @Router /auth/logout [post]
 func (h *Handler) Logout(c *fiber.Ctx) error {
 	token := c.Cookies(refreshCookieName)
 	if err := h.svc.Logout(c.Context(), token); err != nil {

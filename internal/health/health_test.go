@@ -63,7 +63,7 @@ func TestReady_WithBrokenRedis(t *testing.T) {
 	app := fiber.New()
 	app.Get("/health/ready", h.Ready)
 
-	resp, err := app.Test(closedDBRequest("/health/ready"))
+	resp, err := app.Test(closedDBRequest("/health/ready"), 5000)
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusServiceUnavailable, resp.StatusCode)
 	resp.Body.Close()

@@ -195,3 +195,35 @@ services:
     depends_on:
       loki-fiber-boilerplate:
         condition: service_healthy
+
+  server-fiber-boilerplate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: server-fiber-boilerplate
+    restart: unless-stopped
+    environment:
+      APP_NAME: fiber-boilerplate
+      APP_HOST: 0.0.0.0
+      APP_PORT: "8080"
+      APP_ENV: development
+      DATABASE_DRIVER: postgres
+      DATABASE_URL: "postgres://postgres:postgres@db-fiber-boilerplate:5432/fiber_boilerplate?sslmode=disable"
+      REDIS_URL: "redis://redis-fiber-boilerplate:6379/0"
+      JWT_SECRET: change-me-in-production
+      STORAGE_PATH: /app/storage
+      PUBLIC_URL: http://localhost:8080
+      OTEL_ENABLED: "false"
+      SWAGGER_ENABLED: "false"
+    ports:
+      - "8080:8080"
+    depends_on:
+      db-fiber-boilerplate:
+        condition: service_healthy
+      redis-fiber-boilerplate:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8080/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

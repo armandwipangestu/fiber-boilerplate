@@ -989,7 +989,7 @@ Step by step:
 
 ---
 
-## Phase 16 — OpenTelemetry Tracing
+[x] ## Phase 16 — OpenTelemetry Tracing
 
 ### 16.1 Create Tracing Setup
 
@@ -1016,7 +1016,7 @@ Step by step:
 
 ---
 
-## Phase 17 — Graceful Shutdown
+[x] ## Phase 17 — Graceful Shutdown
 
 ### 17.1 Implement Graceful Shutdown
 
@@ -1040,7 +1040,7 @@ Add `SHUTDOWN_TIMEOUT` env var (default `30s`).
 
 ---
 
-## Phase 18 — Cache Layer
+[x] ## Phase 18 — Cache Layer
 
 ### 18.1 Create Cache Interface
 
@@ -1101,7 +1101,7 @@ Step by step:
 
 ---
 
-## Phase 19 — Role & Permission Management
+[x] ## Phase 19 — Role & Permission Management
 
 ### 19.1 Create Role Repository & Service
 
@@ -1127,7 +1127,7 @@ Step by step:
 
 ---
 
-## Phase 20 — API Documentation
+[x] ## Phase 20 — API Documentation
 
 ### 20.1 Install Swag
 
@@ -1164,7 +1164,7 @@ if cfg.AppEnv == "development" {
 
 ---
 
-## Phase 21 — Testing
+[x] ## Phase 21 — Testing
 
 ### 21.1 Unit Test Setup
 
@@ -1210,7 +1210,7 @@ Step by step:
 
 ---
 
-## Phase 22 — Docker
+[x] ## Phase 22 — Docker
 
 ### 22.1 Create Production Dockerfile
 
@@ -1240,7 +1240,7 @@ Step by step:
 
 ---
 
-## Phase 23 — CI/CD
+[x] ## Phase 23 — CI/CD
 
 ### 23.1 Create GitHub Actions Workflow
 
@@ -1259,7 +1259,7 @@ Step by step:
 
 ---
 
-## Phase 24 — Taskfile
+[x] ## Phase 24 — Taskfile
 
 ### 24.1 Create Taskfile.yml
 
@@ -1277,12 +1277,12 @@ Step by step:
 
 ## Completion Checklist
 
-- [ ] All phases complete
-- [ ] All unit tests pass
-- [ ] All E2E tests pass
-- [ ] CI pipeline green
-- [ ] Docker image builds
-- [ ] Swagger docs generated
+- [x] All phases complete
+- [x] All unit tests pass
+- [x] All E2E tests pass
+- [x] CI pipeline green (Go CI + semantic-release)
+- [x] Docker image builds
+- [x] Swagger docs generated
 - [ ] README written
-- [ ] `.env.example` complete
+- [x] `.env.example` complete
 - [ ] Code coverage > 70%

@@ -55,6 +55,17 @@ func (h *Handler) RegisterRoutes(v1 fiber.Router, opts RouteOptions) {
 }
 
 // ListRoles handles GET /roles.
+// @Summary List roles
+// @Tags Roles
+// @Security BearerAuth
+// @Produce json
+// @Param page query int false "Page" default(1)
+// @Param per_page query int false "Items per page" default(20)
+// @Param search query string false "Search by name"
+// @Success 200 {object} ListRolesResponse
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Router /roles [get]
 func (h *Handler) ListRoles(c *fiber.Ctx) error {
 	query := parseListQuery(c)
 	roles, meta, err := h.svc.ListRoles(c.Context(), query)
@@ -69,6 +80,18 @@ func (h *Handler) ListRoles(c *fiber.Ctx) error {
 }
 
 // CreateRole handles POST /roles.
+// @Summary Create a role
+// @Tags Roles
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body CreateRoleRequest true "Role"
+// @Success 201 {object} RoleResponse
+// @Failure 400 {object} map[string]any
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Failure 409 {object} map[string]any
+// @Router /roles [post]
 func (h *Handler) CreateRole(c *fiber.Ctx) error {
 	var req CreateRoleRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -85,6 +108,16 @@ func (h *Handler) CreateRole(c *fiber.Ctx) error {
 }
 
 // GetRole handles GET /roles/:id.
+// @Summary Get a role
+// @Tags Roles
+// @Security BearerAuth
+// @Produce json
+// @Param id path string true "Role ID"
+// @Success 200 {object} RoleResponse
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Failure 404 {object} map[string]any
+// @Router /roles/{id} [get]
 func (h *Handler) GetRole(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if !validID(id) {
@@ -118,6 +151,16 @@ func (h *Handler) UpdateRole(c *fiber.Ctx) error {
 }
 
 // DeleteRole handles DELETE /roles/:id.
+// @Summary Delete a role
+// @Tags Roles
+// @Security BearerAuth
+// @Param id path string true "Role ID"
+// @Success 200 {object} map[string]any
+// @Failure 400 {object} map[string]any
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Failure 404 {object} map[string]any
+// @Router /roles/{id} [delete]
 func (h *Handler) DeleteRole(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if !validID(id) {
@@ -151,6 +194,18 @@ func (h *Handler) GetRolePermissions(c *fiber.Ctx) error {
 }
 
 // SetRolePermissions handles PUT /roles/:id/permissions.
+// @Summary Replace a role's permissions
+// @Tags Roles
+// @Security BearerAuth
+// @Accept json
+// @Param id path string true "Role ID"
+// @Param request body SetRolePermissionsRequest true "Permission IDs"
+// @Success 200 {object} map[string]any
+// @Failure 400 {object} map[string]any
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Failure 404 {object} map[string]any
+// @Router /roles/{id}/permissions [put]
 func (h *Handler) SetRolePermissions(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if !validID(id) {
@@ -170,6 +225,18 @@ func (h *Handler) SetRolePermissions(c *fiber.Ctx) error {
 }
 
 // AssignRole handles POST /roles/:id/users.
+// @Summary Assign a role to a user
+// @Tags Roles
+// @Security BearerAuth
+// @Accept json
+// @Param id path string true "Role ID"
+// @Param request body AssignRoleRequest true "User ID"
+// @Success 200 {object} map[string]any
+// @Failure 400 {object} map[string]any
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Failure 404 {object} map[string]any
+// @Router /roles/{id}/users [post]
 func (h *Handler) AssignRole(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if !validID(id) {
@@ -202,6 +269,14 @@ func (h *Handler) UnassignRole(c *fiber.Ctx) error {
 }
 
 // ListPermissions handles GET /permissions.
+// @Summary List permissions
+// @Tags Permissions
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} ListPermissionsResponse
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Router /permissions [get]
 func (h *Handler) ListPermissions(c *fiber.Ctx) error {
 	query := parseListQuery(c)
 	perms, meta, err := h.svc.ListPermissions(c.Context(), query)
@@ -216,6 +291,18 @@ func (h *Handler) ListPermissions(c *fiber.Ctx) error {
 }
 
 // CreatePermission handles POST /permissions.
+// @Summary Create a permission
+// @Tags Permissions
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body CreatePermissionRequest true "Permission"
+// @Success 201 {object} PermissionResponse
+// @Failure 400 {object} map[string]any
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Failure 409 {object} map[string]any
+// @Router /permissions [post]
 func (h *Handler) CreatePermission(c *fiber.Ctx) error {
 	var req CreatePermissionRequest
 	if err := c.BodyParser(&req); err != nil {

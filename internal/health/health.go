@@ -30,11 +30,24 @@ func NewHandler(db *sql.DB, redis *redis.Client) *Handler {
 }
 
 // Live always reports healthy (process is up).
+// Live handles GET /health/live (liveness probe, always 200).
+// @Summary Liveness probe
+// @Tags Health
+// @Produce json
+// @Success 200 {object} map[string]any
+// @Router /health/live [get]
 func (h *Handler) Live(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"status": "ok"})
 }
 
 // Ready pings every dependency and returns 200 only when all are healthy.
+// Ready handles GET /health/ready (readiness: 503 when dependencies are down).
+// @Summary Readiness probe
+// @Tags Health
+// @Produce json
+// @Success 200 {object} map[string]any
+// @Failure 503 {object} map[string]any
+// @Router /health/ready [get]
 func (h *Handler) Ready(c *fiber.Ctx) error {
 	results := h.checkAll(c.Context())
 	if allHealthy(results) {
@@ -44,6 +57,13 @@ func (h *Handler) Ready(c *fiber.Ctx) error {
 }
 
 // Health is an alias for Ready used by orchestrators expecting /health.
+// Health handles GET /health (full dependency check).
+// @Summary Full health check
+// @Tags Health
+// @Produce json
+// @Success 200 {object} map[string]any
+// @Failure 503 {object} map[string]any
+// @Router /health [get]
 func (h *Handler) Health(c *fiber.Ctx) error {
 	return h.Ready(c)
 }

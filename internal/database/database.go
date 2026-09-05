@@ -36,6 +36,22 @@ func NewDatabase(cfg config.Config) (*sql.DB, error) {
 	return db, nil
 }
 
+// OpenConn opens a raw connection for ad-hoc queries (e.g. maintenance work
+// from migrations or tests) using the standard pgx driver for postgres URLs.
+func OpenConn(url string) (*sql.DB, error) {
+	db, err := sql.Open("pgx", url)
+	if err != nil {
+		return nil, err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := db.PingContext(ctx); err != nil {
+		db.Close()
+		return nil, err
+	}
+	return db, nil
+}
+
 // sqlDriverName maps the config driver value to a registered database/sql
 // driver name. "postgres" is served by the pgx stdlib adapter.
 func sqlDriverName(driver string) string {
