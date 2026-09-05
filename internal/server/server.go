@@ -42,6 +42,7 @@ func New(cfg config.Config, deps Dependencies) *fiber.App {
 	app.Use(middleware.RequestID())
 	app.Use(middleware.SecurityHeaders())
 	app.Use(middleware.NewCORSMiddleware(cfg))
+	app.Use(middleware.NewTracingMiddleware())
 	app.Use(middleware.NewLoggingMiddleware(logger))
 	app.Use(middleware.NewMetricsMiddleware())
 

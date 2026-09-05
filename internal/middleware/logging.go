@@ -26,6 +26,7 @@ func NewLoggingMiddleware(logger *slog.Logger) fiber.Handler {
 			"client_ip", c.IP(),
 			"user_agent", c.Get("User-Agent"),
 			"request_id", requestID,
+			"trace_id", pkg.GetTraceID(c),
 		)
 
 		err := c.Next()
@@ -42,6 +43,7 @@ func NewLoggingMiddleware(logger *slog.Logger) fiber.Handler {
 			"bytes_out", c.Response().Header.ContentLength(),
 			"error", errToString(err),
 			"request_id", requestID,
+			"trace_id", pkg.GetTraceID(c),
 		)
 
 		return err

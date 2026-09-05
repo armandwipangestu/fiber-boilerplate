@@ -1,9 +1,14 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/armandwipangestu/fiber-boilerplate/internal/auth"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/config"
@@ -15,9 +20,12 @@ import (
 	"github.com/armandwipangestu/fiber-boilerplate/internal/rbac"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/server"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/storage"
+	"github.com/armandwipangestu/fiber-boilerplate/internal/tracing"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/user"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/redis/go-redis/v9"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
 func main() {
@@ -48,7 +56,6 @@ func main() {
 		logger.Error("failed to connect to database", "error", err)
 		os.Exit(1)
 	}
-	defer db.Close()
 
 	var rdb *redis.Client
 	if cfg.RedisURL != "" {
@@ -58,7 +65,19 @@ func main() {
 			os.Exit(1)
 		}
 		rdb = redis.NewClient(opts)
-		defer rdb.Close()
+	}
+
+	var tracerProvider *sdktrace.TracerProvider
+	if cfg.OTELEnabled {
+		tracerProvider, err = tracing.Init(cfg.AppName, cfg.OTELEndpoint, cfg.OTELSampleRate)
+		if err != nil {
+			logger.Error("failed to initialize tracing, continuing without it", "error", err)
+		} else {
+			logger.Info("tracing enabled",
+				"endpoint", cfg.OTELEndpoint,
+				"sample_rate", cfg.OTELSampleRate,
+			)
+		}
 	}
 
 	healthHandler := health.NewHandler(db, rdb)
@@ -91,10 +110,72 @@ func main() {
 		"addr", addr,
 	)
 
-	if err := app.Listen(addr); err != nil {
-		logger.Error("server error", "error", err)
-		os.Exit(1)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- app.Listen(addr)
+	}()
+
+	select {
+	case err := <-errCh:
+		if err != nil {
+			logger.Error("server error", "error", err)
+			os.Exit(1)
+		}
+	case <-ctx.Done():
+		logger.Info("shutdown signal received")
+		if err := shutdown(*cfg, logger, app, tracerProvider, rdb, db); err != nil {
+			logger.Error("shutdown error", "error", err)
+			os.Exit(1)
+		}
+		os.Exit(0)
 	}
+}
+
+// shutdown drains in-flight work and closes resources in a fixed order:
+// HTTP server → tracing → metrics → redis → database.
+func shutdown(cfg config.Config, logger *slog.Logger, app *fiber.App, tracerProvider *sdktrace.TracerProvider, rdb *redis.Client, db *sql.DB) error {
+	timeout := cfg.ShutdownTimeout
+	if timeout <= 0 {
+		timeout = 30 * time.Second
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	// 1. HTTP server: stop accepting new connections, drain active requests.
+	logger.Info("shutting down http server", "timeout", timeout.String())
+	if err := app.ShutdownWithTimeout(timeout); err != nil {
+		logger.Warn("http server shutdown did not complete cleanly", "error", err)
+	}
+
+	// 2. Tracing: flush any pending spans.
+	if tracerProvider != nil {
+		logger.Info("shutting down tracing")
+		if err := tracing.Shutdown(ctx, tracerProvider); err != nil {
+			logger.Warn("tracing shutdown error", "error", err)
+		}
+	}
+
+	// 3. Metrics: the Prometheus registry is memory-only; nothing to flush.
+
+	// 4. Redis.
+	if rdb != nil {
+		logger.Info("shutting down redis")
+		if err := rdb.Close(); err != nil {
+			logger.Warn("redis close error", "error", err)
+		}
+	}
+
+	// 5. Database.
+	logger.Info("shutting down database")
+	if err := db.Close(); err != nil {
+		logger.Warn("database close error", "error", err)
+	}
+
+	logger.Info("shutdown complete")
+	return nil
 }
 
 func formatPort(port int) string {
