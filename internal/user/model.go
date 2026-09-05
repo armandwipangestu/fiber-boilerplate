@@ -8,6 +8,7 @@ type Domain struct {
 	Email        string
 	Name         string
 	PasswordHash string
+	AvatarKey    string
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }

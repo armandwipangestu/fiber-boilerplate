@@ -36,6 +36,7 @@ type UserResponse struct {
 	ID        string    `json:"id"`
 	Email     string    `json:"email"`
 	Name      string    `json:"name"`
+	AvatarURL string    `json:"avatar_url"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -51,6 +52,7 @@ type ListEntry struct {
 	Email        string
 	Name         string
 	PasswordHash string
+	AvatarKey    string
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }

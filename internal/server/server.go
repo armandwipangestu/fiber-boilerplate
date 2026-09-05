@@ -69,6 +69,13 @@ func New(cfg config.Config, deps Dependencies) *fiber.App {
 	// Prometheus scrape endpoint
 	app.Get("/metrics", adaptor.HTTPHandler(metrics.Handler()))
 
+	// Local fallback storage: files stored under STORAGE_PATH when S3 is not
+	// configured are served from /uploads.
+	storageRoot := cfg.StoragePath
+	if storageRoot != "" {
+		app.Static("/uploads", storageRoot)
+	}
+
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
 

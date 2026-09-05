@@ -14,6 +14,7 @@ import (
 	"github.com/armandwipangestu/fiber-boilerplate/internal/pkg"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/rbac"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/server"
+	"github.com/armandwipangestu/fiber-boilerplate/internal/storage"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/user"
 
 	"github.com/redis/go-redis/v9"
@@ -62,9 +63,11 @@ func main() {
 
 	healthHandler := health.NewHandler(db, rdb)
 
+	store := storage.New(*cfg, logger)
+
 	userRepo := user.NewPostgresRepository(db)
 	rbacSvc := rbac.NewService(db, rbac.NewInMemoryCache())
-	userSvc := user.NewService(userRepo, rbacSvc)
+	userSvc := user.NewServiceWithStorage(userRepo, rbacSvc, store)
 	validator := pkg.NewValidator()
 	userHandler := user.NewHandler(userSvc, validator)
 

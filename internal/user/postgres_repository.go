@@ -18,7 +18,7 @@ func NewPostgresRepository(db *sql.DB) Repository {
 	return &postgresRepository{db: db}
 }
 
-const userColumns = "id, email, name, password_hash, created_at, updated_at"
+const userColumns = "id, email, name, password_hash, avatar_url, created_at, updated_at"
 
 func (r *postgresRepository) Create(ctx context.Context, u *Domain) (*Domain, error) {
 	query := `INSERT INTO users (email, name, password_hash)
@@ -26,8 +26,10 @@ func (r *postgresRepository) Create(ctx context.Context, u *Domain) (*Domain, er
 	          RETURNING ` + userColumns
 
 	var created Domain
+	var avatar sql.NullString
 	err := r.db.QueryRowContext(ctx, query, u.Email, u.Name, u.PasswordHash).
-		Scan(&created.ID, &created.Email, &created.Name, &created.PasswordHash, &created.CreatedAt, &created.UpdatedAt)
+		Scan(&created.ID, &created.Email, &created.Name, &created.PasswordHash, &avatar, &created.CreatedAt, &created.UpdatedAt)
+	created.AvatarKey = avatar.String
 	if err != nil {
 		return nil, fmt.Errorf("create user: %w", err)
 	}
@@ -38,8 +40,10 @@ func (r *postgresRepository) GetByID(ctx context.Context, id string) (*Domain, e
 	query := `SELECT ` + userColumns + ` FROM users WHERE id = $1`
 
 	var u Domain
+	var avatar sql.NullString
 	err := r.db.QueryRowContext(ctx, query, id).
-		Scan(&u.ID, &u.Email, &u.Name, &u.PasswordHash, &u.CreatedAt, &u.UpdatedAt)
+		Scan(&u.ID, &u.Email, &u.Name, &u.PasswordHash, &avatar, &u.CreatedAt, &u.UpdatedAt)
+	u.AvatarKey = avatar.String
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrUserNotFound
 	}
@@ -53,8 +57,10 @@ func (r *postgresRepository) GetByEmail(ctx context.Context, email string) (*Dom
 	query := `SELECT ` + userColumns + ` FROM users WHERE email = $1`
 
 	var u Domain
+	var avatar sql.NullString
 	err := r.db.QueryRowContext(ctx, query, email).
-		Scan(&u.ID, &u.Email, &u.Name, &u.PasswordHash, &u.CreatedAt, &u.UpdatedAt)
+		Scan(&u.ID, &u.Email, &u.Name, &u.PasswordHash, &avatar, &u.CreatedAt, &u.UpdatedAt)
+	u.AvatarKey = avatar.String
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrUserNotFound
 	}
@@ -98,9 +104,11 @@ func (r *postgresRepository) List(ctx context.Context, query ListUsersQuery) ([]
 	users := []*Domain{}
 	for rows.Next() {
 		var u Domain
-		if err := rows.Scan(&u.ID, &u.Email, &u.Name, &u.PasswordHash, &u.CreatedAt, &u.UpdatedAt); err != nil {
+		var avatar sql.NullString
+		if err := rows.Scan(&u.ID, &u.Email, &u.Name, &u.PasswordHash, &avatar, &u.CreatedAt, &u.UpdatedAt); err != nil {
 			return nil, 0, fmt.Errorf("scan user: %w", err)
 		}
+		u.AvatarKey = avatar.String
 		users = append(users, &u)
 	}
 	if err := rows.Err(); err != nil {
@@ -117,8 +125,10 @@ func (r *postgresRepository) Update(ctx context.Context, u *Domain) (*Domain, er
 	          RETURNING ` + userColumns
 
 	var updated Domain
+	var avatar sql.NullString
 	err := r.db.QueryRowContext(ctx, query, u.Email, u.Name, u.PasswordHash, u.ID).
-		Scan(&updated.ID, &updated.Email, &updated.Name, &updated.PasswordHash, &updated.CreatedAt, &updated.UpdatedAt)
+		Scan(&updated.ID, &updated.Email, &updated.Name, &updated.PasswordHash, &avatar, &updated.CreatedAt, &updated.UpdatedAt)
+	updated.AvatarKey = avatar.String
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrUserNotFound
 	}
@@ -126,6 +136,33 @@ func (r *postgresRepository) Update(ctx context.Context, u *Domain) (*Domain, er
 		return nil, fmt.Errorf("update user: %w", err)
 	}
 	return &updated, nil
+}
+
+func (r *postgresRepository) UpdateAvatar(ctx context.Context, id, key string) (*Domain, error) {
+	query := `UPDATE users
+	          SET avatar_url = $1, updated_at = NOW()
+	          WHERE id = $2
+	          RETURNING ` + userColumns
+
+	var updated Domain
+	var avatar sql.NullString
+	err := r.db.QueryRowContext(ctx, query, nullString(key), id).
+		Scan(&updated.ID, &updated.Email, &updated.Name, &updated.PasswordHash, &avatar, &updated.CreatedAt, &updated.UpdatedAt)
+	updated.AvatarKey = avatar.String
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrUserNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("update user avatar: %w", err)
+	}
+	return &updated, nil
+}
+
+func nullString(s string) sql.NullString {
+	if s == "" {
+		return sql.NullString{}
+	}
+	return sql.NullString{String: s, Valid: true}
 }
 
 func (r *postgresRepository) Delete(ctx context.Context, id string) error {

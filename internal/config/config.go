@@ -24,6 +24,16 @@ type Config struct {
 
 	RedisURL string
 
+	StoragePath string
+	PublicURL   string
+
+	S3Region          string
+	S3AccessKeyID     string
+	S3SecretAccessKey string
+	S3Endpoint        string
+	S3Bucket          string
+	S3ForcePathStyle  bool
+
 	JWTSecret             string
 	JWTAccessTokenExpiry  time.Duration
 	JWTRefreshTokenExpiry time.Duration
@@ -68,6 +78,16 @@ func Load() (*Config, error) {
 		DatabaseConnMaxIdleTime: getEnvDuration("DATABASE_CONN_MAX_IDLE_TIME", 3*time.Minute),
 
 		RedisURL: getEnv("REDIS_URL", ""),
+
+		StoragePath: getEnv("STORAGE_PATH", "storage"),
+		PublicURL:   getEnv("PUBLIC_URL", ""),
+
+		S3Region:          getEnv("S3_REGION", "us-east-1"),
+		S3AccessKeyID:     getEnv("S3_ACCESS_KEY_ID", ""),
+		S3SecretAccessKey: getEnv("S3_SECRET_ACCESS_KEY", ""),
+		S3Endpoint:        getEnv("S3_ENDPOINT", ""),
+		S3Bucket:          getEnv("S3_BUCKET", ""),
+		S3ForcePathStyle:  getEnvBool("S3_FORCE_PATH_STYLE", false),
 
 		JWTSecret:             getEnv("JWT_SECRET", ""),
 		JWTAccessTokenExpiry:  getEnvDuration("JWT_ACCESS_TOKEN_EXPIRY", 15*time.Minute),

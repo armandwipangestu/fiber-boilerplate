@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/armandwipangestu/fiber-boilerplate/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -111,6 +112,67 @@ func TestService_List_Defaults(t *testing.T) {
 	assert.Equal(t, 1, meta.TotalPages)
 }
 
+func TestService_SetAvatar_StoresAndCleansOld(t *testing.T) {
+	ctx := context.Background()
+	mock := newMockRepo()
+	mock.users[0].AvatarKey = "avatars/old.png"
+	stub := &stubStorage{key: "avatars/new.png"}
+	svc := NewServiceWithStorage(mock, nil, stub)
+
+	u, err := svc.SetAvatar(ctx, "a", storage.UploadOptions{Filename: "pic.png", ContentType: "image/png", Data: []byte("x")})
+	require.NoError(t, err)
+	assert.Equal(t, "avatars/new.png", u.AvatarKey)
+	assert.Equal(t, "avatars/old.png", stub.deleted, "old object should be cleaned up")
+}
+
+func TestService_SetAvatar_WithoutStorage(t *testing.T) {
+	ctx := context.Background()
+	mock := newMockRepo()
+	svc := NewService(mock, nil)
+
+	_, err := svc.SetAvatar(ctx, "a", storage.UploadOptions{Filename: "pic.png"})
+	assert.Error(t, err)
+}
+
+func TestService_ClearAvatar_RemovesObject(t *testing.T) {
+	ctx := context.Background()
+	mock := newMockRepo()
+	mock.users[0].AvatarKey = "avatars/pic.png"
+	stub := &stubStorage{}
+	svc := NewServiceWithStorage(mock, nil, stub)
+
+	u, err := svc.ClearAvatar(ctx, "a")
+	require.NoError(t, err)
+	assert.Equal(t, "", u.AvatarKey)
+	assert.Equal(t, "avatars/pic.png", stub.deleted)
+}
+
+func TestService_ResolveURL_EmptyKey(t *testing.T) {
+	svc := NewService(nil, nil)
+	assert.Equal(t, "", svc.ResolveURL(""))
+}
+
+type stubStorage struct {
+	key     string
+	deleted string
+}
+
+func (s *stubStorage) Upload(ctx context.Context, opts storage.UploadOptions) (string, error) {
+	if s.key != "" {
+		return s.key, nil
+	}
+	return "avatars/" + opts.Filename, nil
+}
+
+func (s *stubStorage) Delete(ctx context.Context, key string) error {
+	s.deleted = key
+	return nil
+}
+
+func (s *stubStorage) GetURL(key string) string {
+	return "https://cdn.example/" + key
+}
+
 type stubRBAC struct {
 	allowed bool
 }
@@ -167,6 +229,16 @@ func (m *mockRepo) List(ctx context.Context, q ListUsersQuery) ([]*Domain, int64
 
 func (m *mockRepo) Update(ctx context.Context, u *Domain) (*Domain, error) {
 	return u, nil
+}
+
+func (m *mockRepo) UpdateAvatar(ctx context.Context, id, key string) (*Domain, error) {
+	for _, u := range m.users {
+		if u.ID == id {
+			u.AvatarKey = key
+			return u, nil
+		}
+	}
+	return nil, ErrUserNotFound
 }
 
 func (m *mockRepo) Delete(ctx context.Context, id string) error {
