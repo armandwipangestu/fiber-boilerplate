@@ -1,3 +1,10 @@
+## [1.0.0-rc.4](https://github.com/armandwipangestu/fiber-boilerplate/compare/v1.0.0-rc.3...v1.0.0-rc.4) (2026-09-05)
+
+### ✨ Features
+
+* health check endpoints ([d9679ba](https://github.com/armandwipangestu/fiber-boilerplate/commit/d9679ba4ac9ce045770d28c8d2abdd41a9993d04))
+* prometheus metrics and metrics middleware ([470ddd8](https://github.com/armandwipangestu/fiber-boilerplate/commit/470ddd872526ea0df979bb3a18ed3bf36965bf1e))
+
 ## [1.0.0-rc.3](https://github.com/armandwipangestu/fiber-boilerplate/compare/v1.0.0-rc.2...v1.0.0-rc.3) (2026-09-05)
 
 ### ✨ Features
