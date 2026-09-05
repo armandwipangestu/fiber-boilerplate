@@ -1,3 +1,10 @@
+## [1.0.0-rc.6](https://github.com/armandwipangestu/fiber-boilerplate/compare/v1.0.0-rc.5...v1.0.0-rc.6) (2026-09-05)
+
+### ✨ Features
+
+* graceful shutdown with ordered resource teardown ([0191202](https://github.com/armandwipangestu/fiber-boilerplate/commit/0191202255f23399e133aa4cbf41ca801ce36e64))
+* OTEL tracing with trace context propagation and log correlation ([8c38753](https://github.com/armandwipangestu/fiber-boilerplate/commit/8c38753f4ac25fa27ca86faab2dde04a938cde10))
+
 ## [1.0.0-rc.5](https://github.com/armandwipangestu/fiber-boilerplate/compare/v1.0.0-rc.4...v1.0.0-rc.5) (2026-09-05)
 
 ### ✨ Features
