@@ -3,6 +3,9 @@ package database
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+	"runtime"
 
 	"github.com/armandwipangestu/fiber-boilerplate/internal/config"
 	"github.com/golang-migrate/migrate/v4"
@@ -11,9 +14,10 @@ import (
 )
 
 // RunMigrations applies migration commands ("up" | "down" | "version").
-// The source files are read from the ./migrations directory.
+// The source files are read from the ./migrations directory relative to the
+// project root.
 func RunMigrations(cfg config.Config, direction string) error {
-	m, err := migrate.New("file://migrations", buildMigrateURL(cfg))
+	m, err := migrate.New("file://"+migrationsDir(), buildMigrateURL(cfg))
 	if err != nil {
 		return fmt.Errorf("migrate init: %w", err)
 	}
@@ -40,6 +44,27 @@ func RunMigrations(cfg config.Config, direction string) error {
 		return fmt.Errorf("unknown migration command %q (use up|down|version)", direction)
 	}
 	return nil
+}
+
+// migrationsDir locates the migrations folder by walking up from the caller's
+// file (works for both cmd/server/main.go and tests) until a directory named
+// migrations is found.
+func migrationsDir() string {
+	_, file, _, ok := runtime.Caller(0)
+	dir := filepath.Dir(file)
+	for i := 0; i < 8 && ok; i++ {
+		candidate := filepath.Join(dir, "migrations")
+		if info, err := os.Stat(candidate); err == nil && info.IsDir() {
+			return candidate
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			break
+		}
+		dir = parent
+	}
+	// Fall back to the classic relative path from the current directory.
+	return "migrations"
 }
 
 // buildMigrateURL adapts the configured URL for golang-migrate's pgx driver.
