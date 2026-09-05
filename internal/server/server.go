@@ -10,9 +10,9 @@ import (
 // New builds and configures the Fiber application with core middleware.
 func New(cfg config.Config) *fiber.App {
 	app := fiber.New(fiber.Config{
-		AppName:      cfg.AppName,
+		AppName:           cfg.AppName,
 		EnablePrintRoutes: false,
-		BodyLimit:    10 * 1024 * 1024, // 10MB
+		BodyLimit:         10 * 1024 * 1024, // 10MB
 	})
 
 	app.Use(middleware.RequestID())

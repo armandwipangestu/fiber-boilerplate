@@ -11,16 +11,17 @@ import (
 )
 
 // dailyRotator writes log lines to a per-day file:
-//   logs/app-2006-01-02.log
+//
+//	logs/app-2006-01-02.log
 //
 // It checks the date on every Write and opens a new file when the day
 // rolls over, closing the previous one.
 type dailyRotator struct {
-	mu       sync.Mutex
-	dir      string
-	prefix   string
-	file     *os.File
-	today    string
+	mu     sync.Mutex
+	dir    string
+	prefix string
+	file   *os.File
+	today  string
 }
 
 func newDailyRotator(cfg config.Config) *dailyRotator {

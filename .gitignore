@@ -11,6 +11,9 @@ coverage.html
 # Logs
 logs/
 
+# Docker data volumes
+docker-data/
+
 # IDE
 .idea/
 .vscode/

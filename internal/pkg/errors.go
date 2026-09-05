@@ -91,11 +91,11 @@ func ServiceUnavailable(message string) *AppError {
 
 // Sentinel errors for use with errors.Is. These are plain sentinel vars.
 var (
-	ErrNotFound      = NotFound("not found")
-	ErrUnauthorized  = Unauthorized("unauthorized")
-	ErrForbidden     = Forbidden("forbidden")
-	ErrConflict      = Conflict("conflict")
-	ErrInternal      = Internal("internal server error", nil)
-	ErrRateLimited   = RateLimited("too many requests")
-	ErrUnavailable   = ServiceUnavailable("service unavailable")
+	ErrNotFound     = NotFound("not found")
+	ErrUnauthorized = Unauthorized("unauthorized")
+	ErrForbidden    = Forbidden("forbidden")
+	ErrConflict     = Conflict("conflict")
+	ErrInternal     = Internal("internal server error", nil)
+	ErrRateLimited  = RateLimited("too many requests")
+	ErrUnavailable  = ServiceUnavailable("service unavailable")
 )

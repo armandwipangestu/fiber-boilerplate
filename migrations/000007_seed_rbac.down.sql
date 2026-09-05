@@ -1,0 +1,1 @@
+-- Seeding is not reversible (data rows), so down is intentionally empty.

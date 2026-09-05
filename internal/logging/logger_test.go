@@ -118,11 +118,11 @@ func TestLogger_DevTextHandler(t *testing.T) {
 func configForTest(t *testing.T) config.Config {
 	t.Helper()
 	return config.Config{
-		AppName:      "test-app",
-		AppEnv:       "production",
-		LogOutput:    "file",
-		LogFilePath:  filepath.Join(t.TempDir(), "logs", "app.log"),
-		LogMaxSizeMB: 1,
+		AppName:       "test-app",
+		AppEnv:        "production",
+		LogOutput:     "file",
+		LogFilePath:   filepath.Join(t.TempDir(), "logs", "app.log"),
+		LogMaxSizeMB:  1,
 		LogMaxBackups: 1,
 		LogMaxAgeDays: 1,
 	}

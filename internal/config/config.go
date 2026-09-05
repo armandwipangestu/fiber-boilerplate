@@ -9,11 +9,11 @@ import (
 )
 
 type Config struct {
-	AppName          string
-	AppEnv           string
-	AppPort          int
-	AppHost          string
-	ShutdownTimeout  time.Duration
+	AppName         string
+	AppEnv          string
+	AppPort         int
+	AppHost         string
+	ShutdownTimeout time.Duration
 
 	DatabaseDriver          string
 	DatabaseURL             string
@@ -28,20 +28,20 @@ type Config struct {
 	JWTAccessTokenExpiry  time.Duration
 	JWTRefreshTokenExpiry time.Duration
 
-	RateLimitEnabled     bool
-	RateLimitRequests    int
-	RateLimitExpiration  time.Duration
-	RateLimitStrategy    string
+	RateLimitEnabled    bool
+	RateLimitRequests   int
+	RateLimitExpiration time.Duration
+	RateLimitStrategy   string
 
 	CORSAllowedOrigins []string
 
-	LogLevel       string
-	LogOutput      string
-	LogFilePath    string
-	LogMaxSizeMB   int
-	LogMaxBackups  int
-	LogMaxAgeDays  int
-	LogCompress    bool
+	LogLevel      string
+	LogOutput     string
+	LogFilePath   string
+	LogMaxSizeMB  int
+	LogMaxBackups int
+	LogMaxAgeDays int
+	LogCompress   bool
 
 	OTELEnabled    bool
 	OTELEndpoint   string
