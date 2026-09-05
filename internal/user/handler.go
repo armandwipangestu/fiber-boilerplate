@@ -21,8 +21,9 @@ func NewHandler(svc *Service, validate pkg.Validator) *Handler {
 }
 
 // RegisterRoutes mounts the user endpoints under the given router group.
-func (h *Handler) RegisterRoutes(v1 fiber.Router) {
-	users := v1.Group("/users")
+// All users routes require a valid access token.
+func (h *Handler) RegisterRoutes(v1 fiber.Router, authMW fiber.Handler) {
+	users := v1.Group("/users", authMW)
 
 	users.Post("/", h.Create)
 	users.Get("/", h.List)

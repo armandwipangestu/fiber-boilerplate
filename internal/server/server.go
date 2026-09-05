@@ -11,8 +11,9 @@ import (
 
 // Dependencies injected into the server by the composition root (main).
 type Dependencies struct {
-	UserHandler *user.Handler
-	AuthHandler *auth.Handler
+	UserHandler    *user.Handler
+	AuthHandler    *auth.Handler
+	AuthMiddleware fiber.Handler
 }
 
 // New builds and configures the Fiber application with core middleware.
@@ -34,7 +35,7 @@ func New(cfg config.Config, deps Dependencies) *fiber.App {
 	v1 := api.Group("/v1")
 
 	if deps.UserHandler != nil {
-		deps.UserHandler.RegisterRoutes(v1)
+		deps.UserHandler.RegisterRoutes(v1, deps.AuthMiddleware)
 	}
 	if deps.AuthHandler != nil {
 		deps.AuthHandler.RegisterRoutes(v1)

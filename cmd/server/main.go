@@ -9,6 +9,7 @@ import (
 	"github.com/armandwipangestu/fiber-boilerplate/internal/config"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/database"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/logging"
+	"github.com/armandwipangestu/fiber-boilerplate/internal/middleware"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/pkg"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/server"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/user"
@@ -54,8 +55,9 @@ func main() {
 	authHandler := auth.NewHandler(authSvc, validator)
 
 	app := server.New(*cfg, server.Dependencies{
-		UserHandler: userHandler,
-		AuthHandler: authHandler,
+		UserHandler:    userHandler,
+		AuthHandler:    authHandler,
+		AuthMiddleware: middleware.NewAuthMiddleware(*cfg),
 	})
 
 	addr := cfg.AppHost + ":" + formatPort(cfg.AppPort)
