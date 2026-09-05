@@ -1283,6 +1283,6 @@ Step by step:
 - [x] CI pipeline green (Go CI + semantic-release)
 - [x] Docker image builds
 - [x] Swagger docs generated
-- [ ] README written
+- [x] README written
 - [x] `.env.example` complete
 - [ ] Code coverage > 70%
