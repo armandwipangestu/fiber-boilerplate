@@ -1,3 +1,9 @@
+## [1.0.0-rc.8](https://github.com/armandwipangestu/fiber-boilerplate/compare/v1.0.0-rc.7...v1.0.0-rc.8) (2026-09-05)
+
+### 🧹 Chores
+
+* remove accidental compiled binary and ignore /main ([85b054d](https://github.com/armandwipangestu/fiber-boilerplate/commit/85b054d398faee0c77d040add4e5221ba25f60c4))
+
 ## [1.0.0-rc.7](https://github.com/armandwipangestu/fiber-boilerplate/compare/v1.0.0-rc.6...v1.0.0-rc.7) (2026-09-05)
 
 ### ✨ Features
