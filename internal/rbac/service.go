@@ -9,15 +9,23 @@ import (
 
 const superAdminRole = "admin"
 
-// Service answers role and permission lookups with cache-accelerated DB hits.
+// Service answers role and permission lookups with cache-accelerated DB hits
+// and exposes role & permission administration.
 type Service struct {
 	db    *sql.DB
 	cache Cache
+	admin Repository
 }
 
 // NewService builds the RBAC service.
 func NewService(db *sql.DB, cache Cache) *Service {
-	return &Service{db: db, cache: cache}
+	return &Service{db: db, cache: cache, admin: NewPostgresRepository(db)}
+}
+
+// NewServiceWithAdmin builds the RBAC service with an explicit administration
+// repository (tests, custom stores).
+func NewServiceWithAdmin(db *sql.DB, cache Cache, admin Repository) *Service {
+	return &Service{db: db, cache: cache, admin: admin}
 }
 
 // HasPermission reports whether a user holds the given permission.

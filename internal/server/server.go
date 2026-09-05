@@ -21,6 +21,7 @@ type Dependencies struct {
 	UserHandler    *user.Handler
 	AuthHandler    *auth.Handler
 	HealthHandler  *health.Handler
+	RBACHandler    *rbac.Handler
 	AuthMiddleware fiber.Handler
 	RBACService    *rbac.Service
 	Logger         *slog.Logger
@@ -91,6 +92,16 @@ func New(cfg config.Config, deps Dependencies) *fiber.App {
 	}
 	if deps.AuthHandler != nil {
 		deps.AuthHandler.RegisterRoutes(v1)
+	}
+
+	if deps.RBACHandler != nil {
+		deps.RBACHandler.RegisterRoutes(v1, rbac.RouteOptions{
+			Auth:                     deps.AuthMiddleware,
+			RequireRolesView:         middleware.RequirePermission(deps.RBACService, "roles.view"),
+			RequireRolesManage:       middleware.RequirePermission(deps.RBACService, "roles.manage"),
+			RequirePermissionsView:   middleware.RequirePermission(deps.RBACService, "permissions.view"),
+			RequirePermissionsManage: middleware.RequirePermission(deps.RBACService, "permissions.manage"),
+		})
 	}
 
 	return app
