@@ -40,22 +40,22 @@ func TestMain(m *testing.M) {
 	}
 
 	cfg := config.Config{
-		AppName:               "fiber-boilerplate-e2e",
-		AppEnv:                "test",
-		AppPort:               0,
-		AppHost:               "127.0.0.1",
-		ShutdownTimeout:       5 * time.Second,
-		DatabaseDriver:        "postgres",
-		DatabaseURL:           dbURL,
-		DatabaseMaxOpenConns:  10,
-		DatabaseMaxIdleConns:  5,
+		AppName:                 "fiber-boilerplate-e2e",
+		AppEnv:                  "test",
+		AppPort:                 0,
+		AppHost:                 "127.0.0.1",
+		ShutdownTimeout:         5 * time.Second,
+		DatabaseDriver:          "postgres",
+		DatabaseURL:             dbURL,
+		DatabaseMaxOpenConns:    10,
+		DatabaseMaxIdleConns:    5,
 		DatabaseConnMaxIdleTime: time.Minute,
-		JWTSecret:             "e2e-test-secret",
-		JWTAccessTokenExpiry:  15 * time.Minute,
-		JWTRefreshTokenExpiry: 24 * time.Hour,
-		RateLimitEnabled:      false,
-		StoragePath:           os.TempDir() + "/fiber-e2e-storage",
-		LogLevel:              "warn",
+		JWTSecret:               "e2e-test-secret",
+		JWTAccessTokenExpiry:    15 * time.Minute,
+		JWTRefreshTokenExpiry:   24 * time.Hour,
+		RateLimitEnabled:        false,
+		StoragePath:             os.TempDir() + "/fiber-e2e-storage",
+		LogLevel:                "warn",
 	}
 
 	if err := database.RunMigrations(cfg, "up"); err != nil {
