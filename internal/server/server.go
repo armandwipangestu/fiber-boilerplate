@@ -1,6 +1,8 @@
 package server
 
 import (
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 
 	"github.com/armandwipangestu/fiber-boilerplate/internal/auth"
@@ -27,6 +29,17 @@ func New(cfg config.Config, deps Dependencies) *fiber.App {
 	})
 
 	app.Use(middleware.RequestID())
+
+	if rateLimit, err := middleware.NewRateLimitMiddleware(cfg); err != nil {
+		panic(err) // misconfiguration, fail fast
+	} else if rateLimit != nil {
+		app.Use(rateLimit)
+	}
+
+	app.Use(middleware.NewThrottleMiddleware(middleware.ThrottleConfig{
+		MaxConcurrent: 1000,
+		Timeout:       5 * time.Second,
+	}))
 
 	// Health & liveness
 	app.Get("/ping", func(c *fiber.Ctx) error {
