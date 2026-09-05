@@ -1,16 +1,20 @@
 package rbac
 
 import (
-	"sync"
+	"context"
+	"encoding/json"
+	"log/slog"
 	"time"
+
+	"github.com/armandwipangestu/fiber-boilerplate/internal/cache"
 )
 
 const (
-	cacheTTL          = 5 * time.Minute
-	permCacheKey      = "rbac:permissions"
-	roleCacheKey      = "rbac:roles"
-	permissionsPrefix = "rbac:permissions:"
-	rolesPrefix       = "rbac:roles:"
+	cacheTTL           = 5 * time.Minute
+	permissionsPrefix  = "rbac:permissions:"
+	rolesPrefix        = "rbac:roles:"
+	permissionsPattern = permissionsPrefix + "*"
+	rolesPattern       = rolesPrefix + "*"
 )
 
 // Cache stores per-user permission and role lookups.
@@ -23,71 +27,76 @@ type Cache interface {
 	InvalidateAll()
 }
 
-type cacheEntry struct {
-	value []string
-	at    time.Time
-}
-
-type inMemoryCache struct {
-	mu    sync.RWMutex
-	perms map[string]cacheEntry
-	roles map[string]cacheEntry
-}
-
-// NewInMemoryCache builds the default TTL cache. Phase 18 will layer Redis on
-// top while keeping this interface.
+// NewInMemoryCache builds a standalone in-process cache. Kept for tests and
+// callers that do not need a shared store.
 func NewInMemoryCache() Cache {
-	return &inMemoryCache{
-		perms: make(map[string]cacheEntry),
-		roles: make(map[string]cacheEntry),
-	}
+	return newStoreCache(cache.NewMemoryCache())
 }
 
-func (c *inMemoryCache) GetPermissions(userID string) []string {
-	return c.get(c.perms, permissionsPrefix+userID)
+// NewCache builds an RBAC cache on top of a generic cache store (in-memory or
+// Redis). Multi-instance deployments share the same memoized lookups.
+func NewCache(store cache.Cache) Cache {
+	return newStoreCache(store)
 }
 
-func (c *inMemoryCache) SetPermissions(userID string, perms []string) {
-	c.set(c.perms, permissionsPrefix+userID, perms)
+// storeCache adapts the generic cache.Cache to the RBAC query interface.
+type storeCache struct {
+	store cache.Cache
+	ctx   context.Context
+	log   *slog.Logger
 }
 
-func (c *inMemoryCache) GetRoles(userID string) []string {
-	return c.get(c.roles, rolesPrefix+userID)
+func newStoreCache(store cache.Cache) *storeCache {
+	return &storeCache{store: store, ctx: context.Background(), log: slog.Default()}
 }
 
-func (c *inMemoryCache) SetRoles(userID string, roles []string) {
-	c.set(c.roles, rolesPrefix+userID, roles)
+func (c *storeCache) GetPermissions(userID string) []string {
+	return c.get(permissionsPrefix+userID, "permissions")
 }
 
-func (c *inMemoryCache) get(m map[string]cacheEntry, key string) []string {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	e, ok := m[key]
-	if !ok || time.Since(e.at) > cacheTTL {
+func (c *storeCache) SetPermissions(userID string, perms []string) {
+	c.set(permissionsPrefix+userID, perms)
+}
+
+func (c *storeCache) GetRoles(userID string) []string {
+	return c.get(rolesPrefix+userID, "roles")
+}
+
+func (c *storeCache) SetRoles(userID string, roles []string) {
+	c.set(rolesPrefix+userID, roles)
+}
+
+func (c *storeCache) Invalidate(userID string) {
+	_ = c.store.Delete(c.ctx, permissionsPrefix+userID)
+	_ = c.store.Delete(c.ctx, rolesPrefix+userID)
+}
+
+func (c *storeCache) InvalidateAll() {
+	_ = c.store.DeletePattern(c.ctx, permissionsPattern)
+	_ = c.store.DeletePattern(c.ctx, rolesPattern)
+}
+
+func (c *storeCache) get(key, what string) []string {
+	raw, err := c.store.Get(c.ctx, key)
+	if err != nil {
 		return nil
 	}
-	return e.value
+	var out []string
+	if err := json.Unmarshal(raw, &out); err != nil {
+		c.log.Warn("corrupt cache entry", "what", what, "key", key, "error", err)
+		_ = c.store.Delete(c.ctx, key)
+		return nil
+	}
+	return out
 }
 
-func (c *inMemoryCache) set(m map[string]cacheEntry, key string, value []string) {
+func (c *storeCache) set(key string, value []string) {
 	if value == nil {
 		return
 	}
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	m[key] = cacheEntry{value: value, at: time.Now()}
-}
-
-func (c *inMemoryCache) Invalidate(userID string) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	delete(c.perms, permissionsPrefix+userID)
-	delete(c.roles, rolesPrefix+userID)
-}
-
-func (c *inMemoryCache) InvalidateAll() {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.perms = make(map[string]cacheEntry)
-	c.roles = make(map[string]cacheEntry)
+	raw, err := json.Marshal(value)
+	if err != nil {
+		return
+	}
+	_ = c.store.Set(c.ctx, key, raw, cacheTTL)
 }

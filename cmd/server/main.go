@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/armandwipangestu/fiber-boilerplate/internal/auth"
+	"github.com/armandwipangestu/fiber-boilerplate/internal/cache"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/config"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/database"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/health"
@@ -58,6 +59,7 @@ func main() {
 	}
 
 	var rdb *redis.Client
+	var cacheStore cache.Cache
 	if cfg.RedisURL != "" {
 		opts, err2 := redis.ParseURL(cfg.RedisURL)
 		if err2 != nil {
@@ -65,6 +67,12 @@ func main() {
 			os.Exit(1)
 		}
 		rdb = redis.NewClient(opts)
+	}
+
+	cacheStore, err = cache.NewCache(context.Background(), cfg.RedisURL, logger)
+	if err != nil {
+		logger.Error("failed to initialize cache", "error", err)
+		os.Exit(1)
 	}
 
 	var tracerProvider *sdktrace.TracerProvider
@@ -85,7 +93,7 @@ func main() {
 	store := storage.New(*cfg, logger)
 
 	userRepo := user.NewPostgresRepository(db)
-	rbacSvc := rbac.NewService(db, rbac.NewInMemoryCache())
+	rbacSvc := rbac.NewService(db, rbac.NewCache(cacheStore))
 	userSvc := user.NewServiceWithStorage(userRepo, rbacSvc, store)
 	validator := pkg.NewValidator()
 	userHandler := user.NewHandler(userSvc, validator)
@@ -126,7 +134,7 @@ func main() {
 		}
 	case <-ctx.Done():
 		logger.Info("shutdown signal received")
-		if err := shutdown(*cfg, logger, app, tracerProvider, rdb, db); err != nil {
+		if err := shutdown(*cfg, logger, app, tracerProvider, rdb, cacheStore, db); err != nil {
 			logger.Error("shutdown error", "error", err)
 			os.Exit(1)
 		}
@@ -135,8 +143,8 @@ func main() {
 }
 
 // shutdown drains in-flight work and closes resources in a fixed order:
-// HTTP server → tracing → metrics → redis → database.
-func shutdown(cfg config.Config, logger *slog.Logger, app *fiber.App, tracerProvider *sdktrace.TracerProvider, rdb *redis.Client, db *sql.DB) error {
+// HTTP server → tracing → metrics → cache/redis → database.
+func shutdown(cfg config.Config, logger *slog.Logger, app *fiber.App, tracerProvider *sdktrace.TracerProvider, rdb *redis.Client, cacheStore cache.Cache, db *sql.DB) error {
 	timeout := cfg.ShutdownTimeout
 	if timeout <= 0 {
 		timeout = 30 * time.Second
@@ -160,7 +168,13 @@ func shutdown(cfg config.Config, logger *slog.Logger, app *fiber.App, tracerProv
 
 	// 3. Metrics: the Prometheus registry is memory-only; nothing to flush.
 
-	// 4. Redis.
+	// 4. Cache / Redis.
+	if cacheStore != nil {
+		logger.Info("shutting down cache")
+		if err := cacheStore.Close(); err != nil {
+			logger.Warn("cache close error", "error", err)
+		}
+	}
 	if rdb != nil {
 		logger.Info("shutting down redis")
 		if err := rdb.Close(); err != nil {
