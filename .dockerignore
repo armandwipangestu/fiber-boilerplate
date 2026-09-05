@@ -37,6 +37,10 @@ Dockerfile
 docker-compose*
 .dockerignore
 
+# Go build artifacts
+bin
+docker-data
+
 # Cache
 .cache
 .eslintcache
