@@ -147,8 +147,10 @@ credentials in the `development` environment if they differ.
 OpenAPI docs are generated from source annotations and served at
 `/swagger` in development. The spec is embedded in the binary, so the UI and
 `/docs/swagger/swagger.json` work from any working directory — `go run`, a dev
-shell, or a downloaded standalone binary. Regenerate the spec with
-`task swagger`.
+shell, or a downloaded standalone binary. The UI page itself loads its assets
+from the unpkg CDN (script/style/img sources are allowlisted for that route
+only, while the rest of the API keeps the strict CSP). Regenerate the spec
+with `task swagger`.
 
 Health probes: `GET /health/live` (liveness — always 200), `GET /health/ready`
 and `GET /health` (readiness — 503 when dependencies are down). Metrics:

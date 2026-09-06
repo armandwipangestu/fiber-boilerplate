@@ -2,6 +2,7 @@ package server
 
 import (
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/gofiber/adaptor/v2"
@@ -99,6 +100,7 @@ func New(cfg config.Config, deps Dependencies) *fiber.App {
 				Path:        "swagger",
 				Title:       cfg.AppName,
 			}
+			app.Use(relaxCSPForSwagger())
 			app.Use(swagger.New(swaggerCfg))
 		}
 	}
@@ -143,5 +145,26 @@ func New(cfg config.Config, deps Dependencies) *fiber.App {
 func versionHandler(cfg config.Config) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		return c.JSON(map[string]any{"app": cfg.AppName, "version": pkg.EffectiveVersion()})
+	}
+}
+
+// relaxCSPForSwagger narrows the hardened Content-Security-Policy to the
+// Swagger UI page only: that page loads its assets from the unpkg CDN and
+// ships inline <script>/<style>, both of which the API-wide "default-src
+// 'self'" policy blocks. Every other route keeps the strict header.
+func relaxCSPForSwagger() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		p := c.Path()
+		if p == "/swagger" || strings.HasPrefix(p, "/docs/swagger/") {
+			c.Set("Content-Security-Policy",
+				"default-src 'self'; "+
+					"script-src 'self' 'unsafe-inline' https://unpkg.com; "+
+					"style-src 'self' 'unsafe-inline' https://unpkg.com; "+
+					"img-src 'self' data: https://unpkg.com; "+
+					"connect-src 'self'; "+
+					"font-src 'self' data:; "+
+					"frame-ancestors 'none'; base-uri 'self'")
+		}
+		return c.Next()
 	}
 }
