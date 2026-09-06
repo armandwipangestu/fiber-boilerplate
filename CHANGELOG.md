@@ -1,3 +1,13 @@
+## [1.0.0-rc.10](https://github.com/armandwipangestu/fiber-boilerplate/compare/v1.0.0-rc.9...v1.0.0-rc.10) (2026-09-06)
+
+### ✨ Features
+
+* seed default admin, embed swagger spec, add Bruno collection ([14c1db0](https://github.com/armandwipangestu/fiber-boilerplate/commit/14c1db08063011ee71c807cf951e541395d4f1ea))
+
+### 🐛 Bug Fixes
+
+* allow Swagger UI assets to load under CSP ([4509b8e](https://github.com/armandwipangestu/fiber-boilerplate/commit/4509b8e65cedeb7f6ac872e08da6f3e6f3e1da7f))
+
 ## [1.0.0-rc.9](https://github.com/armandwipangestu/fiber-boilerplate/compare/v1.0.0-rc.8...v1.0.0-rc.9) (2026-09-05)
 
 ### ✨ Features
