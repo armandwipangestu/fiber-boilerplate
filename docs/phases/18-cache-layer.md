@@ -29,7 +29,7 @@
   `rbac:permissions:*` / `rbac:roles:*`, JSON-encoded slices, 5-min TTL,
   `InvalidateAll` uses `DeletePattern`. `NewInMemoryCache` is retained for
   tests.
-- `cmd/server/main.go` builds the store from `REDIS_URL` and closes it during
+- `cmd/app/main.go` builds the store from `REDIS_URL` and closes it during
   graceful shutdown.
 
 ## Verify

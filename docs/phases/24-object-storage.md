@@ -39,7 +39,7 @@ docker compose up -d minio-fiber-boilerplate
 # create bucket + allow anonymous read (or via MinIO console)
 S3_ACCESS_KEY_ID=minioadmin S3_SECRET_ACCESS_KEY=minioadmin \
 S3_ENDPOINT=http://localhost:9000 S3_BUCKET=fiber-boilerplate \
-go run cmd/server/main.go
+go run cmd/app/main.go
 cat avatar.png | curl -X POST -F "avatar=@-;type=image/png" \
   -H "Authorization: Bearer <token>" localhost:8080/api/v1/users/<id>/avatar
 # avatar_url -> http://localhost:9000/fiber-boilerplate/avatars/<uuid>.png

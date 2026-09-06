@@ -40,7 +40,7 @@
 ```bash
 go get github.com/golang-jwt/jwt/v5
 DATABASE_DRIVER=postgres DATABASE_URL="postgres://postgres:postgres@localhost:5433/fiber_boilerplate?sslmode=disable" \
-JWT_SECRET=devsecret APP_ENV=development go run cmd/server/main.go
+JWT_SECRET=devsecret APP_ENV=development go run cmd/app/main.go
 
 curl -c /tmp/c.txt -X POST localhost:8080/api/v1/auth/register -H 'Content-Type: application/json' \
   -d '{"email":"you@example.com","name":"You","password":"supersecret"}'

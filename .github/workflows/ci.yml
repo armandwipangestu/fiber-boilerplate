@@ -60,6 +60,10 @@ jobs:
           --health-retries 5
     env:
       TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/fiber_boilerplate_e2e?sslmode=disable
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/fiber_boilerplate_e2e?sslmode=disable
+      JWT_SECRET: ci-test-secret
+      DEFAULT_ADMIN_EMAIL: admin@ci
+      DEFAULT_ADMIN_PASSWORD: Ci-Admin-123
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -72,6 +76,16 @@ jobs:
 
       - name: Run E2E suite
         run: go test ./tests/e2e/... -count=1
+
+      - name: Console smoke test
+        run: |
+          go build -o bin/app ./cmd/app
+          ./bin/app --version > /dev/null
+          ./bin/app migrate status | grep -q "current version: 9"
+          ./bin/app db:fresh --yes | grep -q 'seeded: \[admin\]'
+          ./bin/app db:fresh --yes --no-seed | grep -q "database is fresh"
+          ./bin/app route:list --json | grep -q '"path": "/api/v1/users/"'
+          ./bin/app config:check | grep -q "check: ok"
 
   vuln:
     name: Vulnerability scan

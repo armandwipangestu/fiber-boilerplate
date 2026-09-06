@@ -41,7 +41,7 @@ go get gopkg.in/natefinch/lumberjack.v2
 # Create files listed above, then:
 DATABASE_URL=postgres://... JWT_SECRET=secret \
 LOG_OUTPUT=both APP_ENV=development \
-go run cmd/server/main.go
+go run cmd/app/main.go
 # logs appear on stdout and in logs/app.log
 ```
 

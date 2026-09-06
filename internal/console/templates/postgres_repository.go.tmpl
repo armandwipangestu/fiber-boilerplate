@@ -1,0 +1,129 @@
+package {{ .Pkg }}
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"fmt"
+)
+
+// postgresRepository stores {{ .Pkg }}s in a PostgreSQL-compatible database.
+type postgresRepository struct {
+	db *sql.DB
+}
+
+// NewPostgresRepository builds a Repository backed by *sql.DB.
+func NewPostgresRepository(db *sql.DB) Repository {
+	return &postgresRepository{db: db}
+}
+
+const {{ .Pkg }}Columns = "id, name, created_at, updated_at"
+
+func (r *postgresRepository) Create(ctx context.Context, d *Domain) (*Domain, error) {
+	query := `INSERT INTO {{ .Table }} (name)
+	          VALUES ($1)
+	          RETURNING ` + {{ .Pkg }}Columns
+
+	var created Domain
+	err := r.db.QueryRowContext(ctx, query, d.Name).
+		Scan(&created.ID, &created.Name, &created.CreatedAt, &created.UpdatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("create {{ .Pkg }}: %w", err)
+	}
+	return &created, nil
+}
+
+func (r *postgresRepository) GetByID(ctx context.Context, id string) (*Domain, error) {
+	query := `SELECT ` + {{ .Pkg }}Columns + ` FROM {{ .Table }} WHERE id = $1`
+
+	var d Domain
+	err := r.db.QueryRowContext(ctx, query, id).
+		Scan(&d.ID, &d.Name, &d.CreatedAt, &d.UpdatedAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, Err{{ .ID }}NotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("get {{ .Pkg }} by id: %w", err)
+	}
+	return &d, nil
+}
+
+func (r *postgresRepository) List(ctx context.Context, query ListQuery) ([]*Domain, int64, error) {
+	page, perPage := query.Page, query.PerPage
+	if page < 1 {
+		page = 1
+	}
+	if perPage < 1 || perPage > 100 {
+		perPage = 20
+	}
+
+	var total int64
+	if err := r.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM {{ .Table }}`).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("count {{ .Pkg }}s: %w", err)
+	}
+
+	listQuery := `SELECT ` + {{ .Pkg }}Columns + ` FROM {{ .Table }}` +
+		fmt.Sprintf(" ORDER BY created_at DESC LIMIT %d OFFSET %d", perPage, (page-1)*perPage)
+
+	rows, err := r.db.QueryContext(ctx, listQuery)
+	if err != nil {
+		return nil, 0, fmt.Errorf("list {{ .Pkg }}s: %w", err)
+	}
+	defer rows.Close()
+
+	items := []*Domain{}
+	for rows.Next() {
+		var d Domain
+		if err := rows.Scan(&d.ID, &d.Name, &d.CreatedAt, &d.UpdatedAt); err != nil {
+			return nil, 0, fmt.Errorf("scan {{ .Pkg }}: %w", err)
+		}
+		items = append(items, &d)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("iterate {{ .Pkg }}s: %w", err)
+	}
+
+	return items, total, nil
+}
+
+func (r *postgresRepository) Update(ctx context.Context, d *Domain) (*Domain, error) {
+	query := `UPDATE {{ .Table }}
+	          SET name = $1, updated_at = NOW()
+	          WHERE id = $2
+	          RETURNING ` + {{ .Pkg }}Columns
+
+	var updated Domain
+	err := r.db.QueryRowContext(ctx, query, d.Name, d.ID).
+		Scan(&updated.ID, &updated.Name, &updated.CreatedAt, &updated.UpdatedAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, Err{{ .ID }}NotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("update {{ .Pkg }}: %w", err)
+	}
+	return &updated, nil
+}
+
+func (r *postgresRepository) Delete(ctx context.Context, id string) error {
+	res, err := r.db.ExecContext(ctx, `DELETE FROM {{ .Table }} WHERE id = $1`, id)
+	if err != nil {
+		return fmt.Errorf("delete {{ .Pkg }}: %w", err)
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("delete {{ .Pkg }} rows: %w", err)
+	}
+	if n == 0 {
+		return Err{{ .ID }}NotFound
+	}
+	return nil
+}
+
+func (r *postgresRepository) ExistsByName(ctx context.Context, name string) (bool, error) {
+	var exists bool
+	err := r.db.QueryRowContext(ctx, `SELECT EXISTS (SELECT 1 FROM {{ .Table }} WHERE name = $1)`, name).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("exists {{ .Pkg }} by name: %w", err)
+	}
+	return exists, nil
+}

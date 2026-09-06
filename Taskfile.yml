@@ -14,11 +14,11 @@ tasks:
 
   dev:
     desc: Run the server in development
-    cmd: go run ./cmd/server
+    cmd: go run ./cmd/app
 
   build:
-    desc: Build the server binary into ./bin
-    cmd: go build -trimpath -o bin/server ./cmd/server
+    desc: Build the app binary into ./bin
+    cmd: go build -trimpath -o bin/app ./cmd/app
 
   test:
     desc: Run the full unit test suite
@@ -46,23 +46,61 @@ tasks:
     desc: Apply database migrations
     env:
       DATABASE_URL: "{{ .DATABASE_URL }}"
-    cmd: go run ./cmd/server migrate up
+    cmd: go run ./cmd/app migrate up
 
   migrate-down:
     desc: Revert the last migration
     env:
       DATABASE_URL: "{{ .DATABASE_URL }}"
-    cmd: go run ./cmd/server migrate down
+    cmd: go run ./cmd/app migrate down
 
   migrate-version:
     desc: Show the current migration version
     env:
       DATABASE_URL: "{{ .DATABASE_URL }}"
-    cmd: go run ./cmd/server migrate version
+    cmd: go run ./cmd/app migrate version
+
+  migrate-status:
+    desc: Show the migration status table
+    env:
+      DATABASE_URL: "{{ .DATABASE_URL }}"
+    cmd: go run ./cmd/app migrate status
+
+  migrate-reset:
+    desc: Revert all migrations and re-apply them
+    env:
+      DATABASE_URL: "{{ .DATABASE_URL }}"
+    cmd: go run ./cmd/app migrate reset --yes
+
+  db-seed:
+    desc: Run all database seeders
+    env:
+      DATABASE_URL: "{{ .DATABASE_URL }}"
+    cmd: go run ./cmd/app db:seed
+
+  db-fresh:
+    desc: Drop the schema, re-migrate and seed
+    env:
+      DATABASE_URL: "{{ .DATABASE_URL }}"
+    cmd: go run ./cmd/app db:fresh --yes
+
+  db-seed-admin:
+    desc: Seed the default admin user
+    env:
+      DATABASE_URL: "{{ .DATABASE_URL }}"
+    cmd: go run ./cmd/app db:seed admin
+
+  config-check:
+    desc: Validate configuration and probe dependencies
+    cmd: go run ./cmd/app config:check
+
+  route-list:
+    desc: Print the registered routes as JSON
+    cmd: go run ./cmd/app route:list --json
 
   swagger:
     desc: Regenerate OpenAPI (Swagger) docs
-    cmd: "{{ .SWAG_CLI }} init -g cmd/server/main.go -o docs/swagger"
+    cmd: "{{ .SWAG_CLI }} init -g cmd/app/main.go -o docs/swagger"
 
   docker-up:
     desc: Build and start the full stack

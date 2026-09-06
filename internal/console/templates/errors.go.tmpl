@@ -1,0 +1,10 @@
+package {{ .Pkg }}
+
+import "github.com/armandwipangestu/fiber-boilerplate/internal/pkg"
+
+// Feature-level business errors. These are *pkg.AppError instances so they
+// carry a code, message, and HTTP status that the handler maps directly.
+var (
+	Err{{ .ID }}NotFound  = pkg.NewAppError("{{ .Upper }}_NOT_FOUND", "{{ .Pkg }} not found", 404, nil)
+	Err{{ .ID }}NameExists = pkg.NewAppError("{{ .Upper }}_NAME_EXISTS", "{{ .Pkg }} name already exists", 409, nil)
+)

@@ -1,0 +1,206 @@
+package {{ .Pkg }}
+
+import (
+	"strconv"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
+
+	"github.com/armandwipangestu/fiber-boilerplate/internal/pkg"
+)
+
+// RouteOptions carries the middleware needed to mount {{ .Pkg }} routes.
+type RouteOptions struct {
+	Auth          fiber.Handler
+	RequireCreate fiber.Handler
+	RequireView   fiber.Handler
+	RequireUpdate fiber.Handler
+	RequireDelete fiber.Handler
+}
+
+// Handler exposes the {{ .Pkg }} feature over HTTP.
+type Handler struct {
+	svc      *Service
+	validate pkg.Validator
+}
+
+// NewHandler builds the {{ .Pkg }} handler.
+func NewHandler(svc *Service, validate pkg.Validator) *Handler {
+	return &Handler{svc: svc, validate: validate}
+}
+
+// RegisterRoutes mounts the {{ .Pkg }} endpoints under the given router group.
+// All {{ .Pkg }} routes require a valid access token plus a matching permission.
+func (h *Handler) RegisterRoutes(v1 fiber.Router, opts RouteOptions) {
+	group := v1.Group("/{{ .Table }}", opts.Auth)
+
+	group.Post("/", opts.RequireCreate, h.Create)
+	group.Get("/", opts.RequireView, h.List)
+	group.Get("/:id", opts.RequireView, h.GetByID)
+	group.Patch("/:id", opts.RequireUpdate, h.Update)
+	group.Delete("/:id", opts.RequireDelete, h.Delete)
+}
+
+// Create handles POST /{{ .Table }}.
+// @Summary Create a {{ .Pkg }}
+// @Tags {{ .Plural }}
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body Create{{ .ID }}Request true "{{ .ID }}"
+// @Success 201 {object} {{ .ID }}Response
+// @Failure 400 {object} map[string]any
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Failure 409 {object} map[string]any
+// @Router /{{ .Table }} [post]
+func (h *Handler) Create(c *fiber.Ctx) error {
+	var req Create{{ .ID }}Request
+	if err := c.BodyParser(&req); err != nil {
+		return pkg.BadRequestResponse(c, "invalid request body")
+	}
+
+	if fields, err := h.validate.ValidateStruct(&req); err != nil {
+		return pkg.ValidationResponse(c, "validation error", fields)
+	}
+
+	d, err := h.svc.Create(c.Context(), req)
+	if err != nil {
+		return pkg.Error(c, err)
+	}
+	return pkg.Created(c, toResponse(d))
+}
+
+// List handles GET /{{ .Table }}.
+// @Summary List {{ .Pkg }}s with pagination
+// @Tags {{ .Plural }}
+// @Security BearerAuth
+// @Produce json
+// @Param page query int false "Page" default(1)
+// @Param per_page query int false "Items per page" default(20)
+// @Success 200 {object} List{{ .Plural }}Response
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Router /{{ .Table }} [get]
+func (h *Handler) List(c *fiber.Ctx) error {
+	query := ListQuery{
+		Page:    queryInt(c, "page", 1),
+		PerPage: queryInt(c, "per_page", 20),
+	}
+
+	items, meta, err := h.svc.List(c.Context(), query)
+	if err != nil {
+		return pkg.Error(c, err)
+	}
+
+	responses := make([]{{ .ID }}Response, 0, len(items))
+	for _, d := range items {
+		responses = append(responses, toResponse(d))
+	}
+	return pkg.OK(c, List{{ .Plural }}Response{Items: responses, Meta: meta})
+}
+
+// GetByID handles GET /{{ .Table }}/:id.
+// @Summary Get a {{ .Pkg }} by ID
+// @Tags {{ .Plural }}
+// @Security BearerAuth
+// @Produce json
+// @Param id path string true "{{ .ID }} ID"
+// @Success 200 {object} {{ .ID }}Response
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Failure 404 {object} map[string]any
+// @Router /{{ .Table }}/{id} [get]
+func (h *Handler) GetByID(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if !validID(id) {
+		return pkg.BadRequestResponse(c, "invalid {{ .Pkg }} id")
+	}
+
+	d, err := h.svc.GetByID(c.Context(), id)
+	if err != nil {
+		return pkg.Error(c, err)
+	}
+	return pkg.OK(c, toResponse(d))
+}
+
+// Update handles PATCH /{{ .Table }}/:id.
+// @Summary Update a {{ .Pkg }}
+// @Tags {{ .Plural }}
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path string true "{{ .ID }} ID"
+// @Param request body Update{{ .ID }}Request true "Fields to update"
+// @Success 200 {object} {{ .ID }}Response
+// @Failure 400 {object} map[string]any
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Failure 404 {object} map[string]any
+// @Router /{{ .Table }}/{id} [patch]
+func (h *Handler) Update(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if !validID(id) {
+		return pkg.BadRequestResponse(c, "invalid {{ .Pkg }} id")
+	}
+
+	var req Update{{ .ID }}Request
+	if err := c.BodyParser(&req); err != nil {
+		return pkg.BadRequestResponse(c, "invalid request body")
+	}
+
+	if fields, err := h.validate.ValidateStruct(&req); err != nil {
+		return pkg.ValidationResponse(c, "validation error", fields)
+	}
+
+	d, err := h.svc.Update(c.Context(), id, req)
+	if err != nil {
+		return pkg.Error(c, err)
+	}
+	return pkg.OK(c, toResponse(d))
+}
+
+// Delete handles DELETE /{{ .Table }}/:id.
+// @Summary Delete a {{ .Pkg }}
+// @Tags {{ .Plural }}
+// @Security BearerAuth
+// @Param id path string true "{{ .ID }} ID"
+// @Success 200 {object} map[string]any
+// @Failure 400 {object} map[string]any
+// @Failure 401 {object} map[string]any
+// @Failure 403 {object} map[string]any
+// @Failure 404 {object} map[string]any
+// @Router /{{ .Table }}/{id} [delete]
+func (h *Handler) Delete(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if !validID(id) {
+		return pkg.BadRequestResponse(c, "invalid {{ .Pkg }} id")
+	}
+
+	err := h.svc.Delete(c.Context(), id)
+	if err != nil {
+		return pkg.Error(c, err)
+	}
+	return pkg.Message(c, fiber.StatusOK, "{{ .Pkg }} deleted")
+}
+
+func toResponse(d *Domain) {{ .ID }}Response {
+	return {{ .ID }}Response{
+		ID:        d.ID,
+		Name:      d.Name,
+		CreatedAt: d.CreatedAt,
+		UpdatedAt: d.UpdatedAt,
+	}
+}
+
+func validID(id string) bool {
+	_, err := uuid.Parse(id)
+	return err == nil
+}
+
+func queryInt(c *fiber.Ctx, key string, fallback int) int {
+	if v, err := strconv.Atoi(c.Query(key)); err == nil {
+		return v
+	}
+	return fallback
+}

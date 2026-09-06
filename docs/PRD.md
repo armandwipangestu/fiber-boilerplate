@@ -367,7 +367,7 @@ fiber-boilerplate/
 
 | Directory | Responsibility | Belongs | Does NOT Belong |
 |-----------|---------------|---------|-----------------|
-| `cmd/server/` | Application entry point, dependency wiring, startup | `main.go` only | Business logic, configuration structs |
+| `cmd/app/` | Application entry point, dependency wiring, startup | `main.go` only | Business logic, configuration structs |
 | `internal/config/` | Config struct, loading from env, validation | Config definition and loading | Business logic, HTTP handlers |
 | `internal/server/` | Fiber app creation, middleware registration, route mounting, shutdown | Server setup only | Individual feature logic |
 | `internal/database/` | DB connection pool, migration execution, transaction helper | Database infrastructure | Domain logic, feature-specific queries |
@@ -390,7 +390,7 @@ fiber-boilerplate/
 ### 6.3 Dependency Direction
 
 ```text
-cmd/server
+cmd/app
     ├── imports: internal/config
     ├── imports: internal/server
     ├── imports: internal/database
@@ -1442,7 +1442,7 @@ type ValidationErrorResponse struct {
 ### 15.6 Generation Workflow
 
 ```bash
-swag init -g cmd/server/main.go -o docs/swagger
+swag init -g cmd/app/main.go -o docs/swagger
 ```
 
 This generates:
@@ -1455,7 +1455,7 @@ Swagger UI is served at `/swagger/index.html` in development mode only.
 ### 15.7 CI Validation
 
 ```bash
-swag init -g cmd/server/main.go -o docs/swagger
+swag init -g cmd/app/main.go -o docs/swagger
 git diff --exit-code docs/swagger/  # fail if generated files changed
 ```
 
@@ -2613,12 +2613,12 @@ tasks:
       - docker compose up -d postgres redis
       - sleep 2
       - task migrate-up
-      - go run cmd/server/main.go
+      - go run cmd/app/main.go
 
   build:
     desc: "Build the application"
     cmds:
-      - go build -o bin/server cmd/server/main.go
+      - go build -o bin/app cmd/app/main.go
 
   test:
     desc: "Run all tests"
@@ -2655,12 +2655,12 @@ tasks:
   migrate-up:
     desc: "Run pending migrations"
     cmds:
-      - go run cmd/server/main.go migrate up
+      - go run cmd/app/main.go migrate up
 
   migrate-down:
     desc: "Rollback last migration"
     cmds:
-      - go run cmd/server/main.go migrate down 1
+      - go run cmd/app/main.go migrate down 1
 
   migrate-create:
     desc: "Create new migration"
@@ -2670,7 +2670,7 @@ tasks:
   swagger:
     desc: "Generate OpenAPI docs"
     cmds:
-      - swag init -g cmd/server/main.go -o docs/swagger
+      - swag init -g cmd/app/main.go -o docs/swagger
 
   docker-up:
     desc: "Start all Docker services"
@@ -2805,7 +2805,7 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /app/server cmd/server/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /app/app cmd/app/main.go
 
 # Runtime stage
 FROM alpine:3.19
@@ -2817,7 +2817,7 @@ RUN addgroup -g 1001 appgroup && \
 
 WORKDIR /app
 
-COPY --from=builder /app/server .
+COPY --from=builder /app/app .
 COPY --from=builder /app/migrations ./migrations
 
 RUN mkdir -p /app/logs && chown -R appuser:appgroup /app
@@ -2829,7 +2829,7 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health/live || exit 1
 
-ENTRYPOINT ["/app/server"]
+ENTRYPOINT ["/app/app"]
 ```
 
 ### 31.2 Image Optimization
@@ -2926,7 +2926,7 @@ jobs:
         with:
           go-version: "1.22"
       - name: Build
-        run: go build -o /dev/null cmd/server/main.go
+        run: go build -o /dev/null cmd/app/main.go
 
   swagger-check:
     runs-on: ubuntu-latest
@@ -2938,7 +2938,7 @@ jobs:
       - name: Install swag
         run: go install github.com/swaggo/swag/cmd/swag@latest
       - name: Generate docs
-        run: swag init -g cmd/server/main.go -o docs/swagger
+        run: swag init -g cmd/app/main.go -o docs/swagger
       - name: Check for changes
         run: git diff --exit-code docs/swagger/
 

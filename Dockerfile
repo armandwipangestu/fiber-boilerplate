@@ -14,7 +14,7 @@ RUN go mod download
 
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w -X github.com/armandwipangestu/fiber-boilerplate/internal/pkg.Version=${VERSION}" \
-    -o /out/server ./cmd/server
+    -o /out/app ./cmd/app
 
 # ---- Runtime stage -------------------------------------------------------
 FROM alpine:3.22
@@ -25,7 +25,7 @@ RUN apk add --no-cache ca-certificates tzdata wget \
 
 WORKDIR /app
 
-COPY --from=build /out/server /app/server
+COPY --from=build /out/app /app/app
 # Migrations must be available at runtime for the `migrate` subcommand.
 COPY migrations /app/migrations
 
@@ -37,4 +37,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget -qO- http://127.0.0.1:8080/health/live || exit 1
 
-ENTRYPOINT ["/app/server"]
+ENTRYPOINT ["/app/app"]

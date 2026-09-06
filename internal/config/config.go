@@ -63,7 +63,25 @@ type Config struct {
 	DefaultAdminPassword string
 }
 
+// Load loads the full server configuration. Both DATABASE_URL and JWT_SECRET
+// are required. Prefer LoadCLI for console commands that only touch the
+// database.
 func Load() (*Config, error) {
+	cfg, err := LoadCLI()
+	if err != nil {
+		return nil, err
+	}
+	if cfg.JWTSecret == "" {
+		return nil, fmt.Errorf("JWT_SECRET is required")
+	}
+	return cfg, nil
+}
+
+// LoadCLI loads the configuration for console commands such as migrations,
+// seeding or route listing. Only DATABASE_URL is required; JWT_SECRET and the
+// remaining env vars are read with their defaults so the same binary drives
+// both the server and the artisan tooling.
+func LoadCLI() (*Config, error) {
 	loadDotEnv()
 
 	cfg := &Config{
@@ -121,21 +139,11 @@ func Load() (*Config, error) {
 		DefaultAdminPassword: getEnv("DEFAULT_ADMIN_PASSWORD", ""),
 	}
 
-	if err := cfg.validate(); err != nil {
-		return nil, err
+	if cfg.DatabaseURL == "" {
+		return nil, fmt.Errorf("DATABASE_URL is required")
 	}
 
 	return cfg, nil
-}
-
-func (c *Config) validate() error {
-	if c.DatabaseURL == "" {
-		return fmt.Errorf("DATABASE_URL is required")
-	}
-	if c.JWTSecret == "" {
-		return fmt.Errorf("JWT_SECRET is required")
-	}
-	return nil
 }
 
 func loadDotEnv() {

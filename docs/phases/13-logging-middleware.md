@@ -19,7 +19,7 @@
 ## How to Reproduce
 
 ```bash
-go run cmd/server/main.go
+go run cmd/app/main.go
 curl localhost:8080/ping   # LOG_LEVEL=debug to also see "request started"
 ```
 

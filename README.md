@@ -49,8 +49,9 @@ be forked and filled in with your domain.
 ## Architecture
 
 ```
-cmd/server           entrypoint + graceful shutdown + migrate subcommand
-internal/app         composition root (Build/Shutdown), shared by server & tests
+cmd/app             entrypoint + graceful shutdown + artisan CLI (`migrate`, `make:*`, `db:*`, `config:check`, `route:list`)
+internal/app         composition root (Build/Shutdown), shared by app & tests
+internal/console     artisan command logic (migrations, codegen, seeding, checks)
 internal/config      env-driven configuration
 internal/server      Fiber app, middleware stack, route mounting
 internal/{auth,user,rbac}   domains (model → repository → service → handler → routes)
@@ -73,7 +74,7 @@ docker compose up -d
 
 # 2. Point at it and start
 cp .env.example .env
-go run ./cmd/server            # or: task dev
+go run ./cmd/app            # or: task dev
 ```
 
 A few minutes later, in a browser:
@@ -89,10 +90,51 @@ A few minutes later, in a browser:
 ### Migrations
 
 ```bash
-go run ./cmd/server migrate up        # apply         (or: task migrate-up)
-go run ./cmd/server migrate down      # revert 1 step
-go run ./cmd/server migrate version   # current state
+go run ./cmd/app migrate up        # apply                      (or: task migrate-up)
+go run ./cmd/app migrate down      # revert 1 step
+go run ./cmd/app migrate status    # table of applied/current/pending (or: task migrate-status)
+go run ./cmd/app migrate reset     # down-to-nothing, then up     (or: task migrate-reset)
+go run ./cmd/app migrate version   # current state
 ```
+
+`migrate down` and `migrate reset` prompt for confirmation and accept
+`--yes`. Only `DATABASE_URL` is required to run commands under
+`internal/database`; `JWT_SECRET` and friends are validated on server start
+or `config:check`.
+
+## Artisan console
+
+The binary doubles as a Laravel-style CLI. Running it without a subcommand
+serves the API; give it a command to drive the project:
+
+```bash
+go run ./cmd/app --version        # or: ./app --version
+
+# Database
+go run ./cmd/app migrate status
+go run ./cmd/app db:seed               # run all seeders
+go run ./cmd/app db:seed admin         # run one seeder
+go run ./cmd/app db:fresh --yes        # drop schema + migrate + seed (--no-seed)
+
+# Diagnostics
+go run ./cmd/app config:check          # validate env, probe DB/Redis
+go run ./cmd/app route:list            # table of registered routes (--json)
+
+# Code generation (writes into internal/<feature>/ + migrations/, gofmt'd)
+go run ./cmd/app make:model blog
+go run ./cmd/app make:dto blog
+go run ./cmd/app make:repository blog
+go run ./cmd/app make:service blog
+go run ./cmd/app make:handler blog
+go run ./cmd/app make:feature blog     # all of the above + migration scaffold
+
+# Server
+go run ./cmd/app                        # or: task dev
+```
+
+`make:feature` prints a wiring checklist (mount in `internal/server`,
+register permissions in `migrations/000007_seed_rbac.up.sql`); generated
+files are never overwritten without `--force`.
 
 ## Configuration
 
@@ -132,9 +174,9 @@ The repo ships a ready-made [Bruno](https://www.usebruno.com/) collection in
 few minutes:
 
 ```bash
-go run ./cmd/server migrate up      # apply migrations
+go run ./cmd/app migrate up      # apply migrations
 cp .env.example .env                # seeds admin@example.com on startup
-go run ./cmd/server                 # or: docker compose up -d --build
+go run ./cmd/app                 # or: docker compose up -d --build
 ```
 
 Then open Bruno → **Collection → Open** → pick `bruno/Fiber Boilerplate` and
@@ -155,7 +197,7 @@ with `task swagger`.
 Health probes: `GET /health/live` (liveness — always 200), `GET /health/ready`
 and `GET /health` (readiness — 503 when dependencies are down). Metrics:
 `GET /metrics`. Version: `GET /version` (also shown on startup and printable
-with `server -version`).
+with `app --version`).
 
 ### Auth — `POST /api/v1/auth`
 
@@ -245,8 +287,8 @@ Pick the one matching your machine (`.sha256` checksums included), extract,
 `chmod +x fiber-boilerplate`, and run:
 
 ```bash
-./fiber-boilerplate -version        # print the release version
-./fiber-boilerplate migrate up       # apply migrations
+./fiber-boilerplate --version          # print the release version
+./fiber-boilerplate migrate up          # apply migrations
 APP_ENV=production DATABASE_URL=... JWT_SECRET=... ./fiber-boilerplate
 ```
 

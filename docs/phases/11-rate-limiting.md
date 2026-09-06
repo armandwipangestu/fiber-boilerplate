@@ -32,7 +32,7 @@
 ## How to Reproduce
 
 ```bash
-RATE_LIMIT_ENABLED=true RATE_LIMIT_REQUESTS=3 RATE_LIMIT_EXPIRATION=60s go run cmd/server/main.go
+RATE_LIMIT_ENABLED=true RATE_LIMIT_REQUESTS=3 RATE_LIMIT_EXPIRATION=60s go run cmd/app/main.go
 for i in 1 2 3 4; do curl -i localhost:8080/ping | head -1; done
 ```
 
