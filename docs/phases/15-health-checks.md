@@ -20,7 +20,7 @@
 
 ```bash
 DATABASE_URL='postgres://postgres:postgres@localhost:5433/fiber_boilerplate?sslmode=disable' \
-REDIS_URL='redis://localhost:6379/0' JWT_SECRET=dev PORT=8080 go run cmd/server/main.go
+REDIS_URL='redis://localhost:6379/0' JWT_SECRET=dev PORT=8080 go run cmd/app/main.go
 curl localhost:8080/health/live
 curl localhost:8080/health/ready
 ```

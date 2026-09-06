@@ -1,0 +1,94 @@
+package {{ .Pkg }}
+
+import (
+	"context"
+	"errors"
+	"math"
+)
+
+// Service contains the {{ .Pkg }} feature's business rules.
+type Service struct {
+	repo Repository
+}
+
+// NewService builds the {{ .Pkg }} service.
+func NewService(repo Repository) *Service {
+	return &Service{repo: repo}
+}
+
+// Create validates uniqueness and persists a {{ .Pkg }}.
+func (s *Service) Create(ctx context.Context, req Create{{ .ID }}Request) (*Domain, error) {
+	exists, err := s.repo.ExistsByName(ctx, req.Name)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, Err{{ .ID }}NameExists
+	}
+
+	return s.repo.Create(ctx, &Domain{Name: req.Name})
+}
+
+// GetByID fetches a single {{ .Pkg }}.
+func (s *Service) GetByID(ctx context.Context, id string) (*Domain, error) {
+	return s.repo.GetByID(ctx, id)
+}
+
+// List returns a page of {{ .Pkg }}s plus pagination metadata.
+func (s *Service) List(ctx context.Context, query ListQuery) ([]*Domain, PaginationMeta, error) {
+	items, total, err := s.repo.List(ctx, query)
+	if err != nil {
+		return nil, PaginationMeta{}, err
+	}
+
+	page, perPage := query.Page, query.PerPage
+	if page < 1 {
+		page = 1
+	}
+	if perPage < 1 || perPage > 100 {
+		perPage = 20
+	}
+
+	totalPages := int(math.Ceil(float64(total) / float64(perPage)))
+	if totalPages == 0 {
+		totalPages = 1
+	}
+
+	return items, PaginationMeta{
+		Page:       page,
+		PerPage:    perPage,
+		TotalItems: total,
+		TotalPages: totalPages,
+	}, nil
+}
+
+// Update applies only the provided fields.
+func (s *Service) Update(ctx context.Context, id string, req Update{{ .ID }}Request) (*Domain, error) {
+	current, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.Name != nil && *req.Name != current.Name {
+		current.Name = *req.Name
+		exists, err := s.repo.ExistsByName(ctx, current.Name)
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			return nil, Err{{ .ID }}NameExists
+		}
+	}
+
+	return s.repo.Update(ctx, current)
+}
+
+// Delete removes a {{ .Pkg }}.
+func (s *Service) Delete(ctx context.Context, id string) error {
+	return s.repo.Delete(ctx, id)
+}
+
+// IsNotFound reports whether err is the feature's not-found error.
+func IsNotFound(err error) bool {
+	return errors.Is(err, Err{{ .ID }}NotFound)
+}

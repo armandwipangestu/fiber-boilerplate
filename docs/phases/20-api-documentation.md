@@ -13,7 +13,7 @@ go install github.com/swaggo/swag/cmd/swag@latest
 ### 20.2 OpenAPI annotations
 - General metadata (`@title`, `@version`, `@description`, `@host`,
   `@BasePath /api/v1`) and the `BearerAuth` API-key security scheme in
-  `cmd/server/main.go`.
+  `cmd/app/main.go`.
 - Per-handler `@Summary` / `@Tags` / `@Param` / `@Success` / `@Failure` /
   `@Router` annotations across:
   - Auth: `register`, `login`, `refresh`, `logout`
@@ -24,7 +24,7 @@ go install github.com/swaggo/swag/cmd/swag@latest
 
 ### 20.3 Generate docs
 ```bash
-swag init -g cmd/server/main.go -o docs/swagger
+swag init -g cmd/app/main.go -o docs/swagger
 ```
 Emits `docs.go`, `swagger.json`, `swagger.yaml`.
 

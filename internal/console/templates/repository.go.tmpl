@@ -1,0 +1,13 @@
+package {{ .Pkg }}
+
+import "context"
+
+// Repository is the storage abstraction for the {{ .Pkg }} feature.
+type Repository interface {
+	Create(ctx context.Context, d *Domain) (*Domain, error)
+	GetByID(ctx context.Context, id string) (*Domain, error)
+	List(ctx context.Context, query ListQuery) ([]*Domain, int64, error)
+	Update(ctx context.Context, d *Domain) (*Domain, error)
+	Delete(ctx context.Context, id string) error
+	ExistsByName(ctx context.Context, name string) (bool, error)
+}

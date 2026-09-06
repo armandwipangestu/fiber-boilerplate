@@ -266,13 +266,13 @@ jobs:
           if [ "${{ matrix.goos }}" = "windows" ]; then
               CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
                 go build -trimpath -ldflags="${LDFLAGS}" \
-                -o dist/staging/fiber-boilerplate.exe ./cmd/server
+                -o dist/staging/fiber-boilerplate.exe ./cmd/app
               ARTIFACT=fiber-boilerplate_${VERSION}_${{ matrix.goos }}_${{ matrix.goarch }}.${{ matrix.ext }}
               (cd dist/staging && zip -q ../${ARTIFACT} fiber-boilerplate.exe)
           else
               CGO_ENABLED=0 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
                 go build -trimpath -ldflags="${LDFLAGS}" \
-                -o dist/staging/fiber-boilerplate ./cmd/server
+                -o dist/staging/fiber-boilerplate ./cmd/app
               ARTIFACT=fiber-boilerplate_${VERSION}_${{ matrix.goos }}_${{ matrix.goarch }}.${{ matrix.ext }}
               tar -C dist/staging -czf dist/${ARTIFACT} fiber-boilerplate
           fi

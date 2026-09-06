@@ -10,13 +10,13 @@
   dependency (DB, Redis, cache, tracer, storage, repos, handlers) and
   exposes `Build(logger, cfg) (*Resources, error)` plus a `Shutdown(ctx)`
   that tears down in the same fixed order as before.
-- `cmd/server/main.go` is now a thin shell: load config → handle the
+- `cmd/app/main.go` is now a thin shell: load config → handle the
   `migrate` subcommand → `app.Build` → signal loop → `app.Shutdown`.
 
 ### 21.2 Migration resolution
 - `database.RunMigrations` now locates `migrations/` by walking up from the
   caller's file instead of relying on the process cwd, so it works from both
-  `cmd/server` and `tests/e2e`.
+  `cmd/app` and `tests/e2e`.
 
 ### 21.3 The E2E suite (`tests/e2e`)
 - `setup_test.go`: `TestMain` creates the dedicated `fiber_boilerplate_e2e`

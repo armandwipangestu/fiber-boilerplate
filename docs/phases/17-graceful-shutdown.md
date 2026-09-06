@@ -5,7 +5,7 @@
 
 ## Deliverables
 
-### 17.1 Graceful shutdown in `cmd/server/main.go`
+### 17.1 Graceful shutdown in `cmd/app/main.go`
 - `signal.NotifyContext` listens for `SIGINT`/`SIGTERM`.
 - `app.Listen` runs in a goroutine; listen errors are surfaced on a channel.
 - On signal, `shutdown(cfg, logger, app, tracerProvider, rdb, db)` tears down in

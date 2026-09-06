@@ -45,7 +45,7 @@ go get github.com/stretchr/testify
 # 2. Create files listed in Deliverables
 
 # 3. Run
-DATABASE_URL=postgres://... JWT_SECRET=secret go run cmd/server/main.go
+DATABASE_URL=postgres://... JWT_SECRET=secret go run cmd/app/main.go
 curl -i http://localhost:8080/ping
 # expect 200 + X-Request-Id header
 ```

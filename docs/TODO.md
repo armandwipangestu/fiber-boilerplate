@@ -18,7 +18,7 @@ go mod init github.com/armandwipangestu/fiber-boilerplate
 ### 1.2 Create Directory Structure
 
 ```bash
-mkdir -p cmd/server
+mkdir -p cmd/app
 mkdir -p internal/{config,server,database,cache,middleware,logging,metrics,tracing,health}
 mkdir -p internal/{auth,user,role,permission,rbac,pkg}
 mkdir -p migrations
@@ -93,7 +93,7 @@ Step by step:
 
 ### 1.7 Create Application Entry Point
 
-**File:** `cmd/server/main.go`
+**File:** `cmd/app/main.go`
 
 Step by step:
 1. Import `internal/config`
@@ -102,7 +102,7 @@ Step by step:
 4. Start Fiber server on configured host:port
 5. Add signal handling for `SIGINT`/`SIGTERM`
 
-**Verify:** `go run cmd/server/main.go` starts and listens on port 8080.
+**Verify:** `go run cmd/app/main.go` starts and listens on port 8080.
 
 ### 1.8 Install Fiber
 
@@ -285,7 +285,7 @@ Step by step:
 
 ### 3.7 Integrate Logger with Server
 
-Update `cmd/server/main.go`:
+Update `cmd/app/main.go`:
 
 Step by step:
 1. Create logger via `logging.NewLogger(cfg)`
@@ -402,14 +402,14 @@ Create migration files for:
 
 ### 4.7 Add Migration Subcommand
 
-Update `cmd/server/main.go`:
+Update `cmd/app/main.go`:
 
 Step by step:
 1. Check if `os.Args[1] == "migrate"`
 2. If so, call `database.RunMigrations(cfg, os.Args[2])`
 3. Exit after migration completes
 
-**Verify:** `go run cmd/server/main.go migrate up` runs migrations.
+**Verify:** `go run cmd/app/main.go migrate up` runs migrations.
 
 ---
 
@@ -1020,7 +1020,7 @@ Step by step:
 
 ### 17.1 Implement Graceful Shutdown
 
-Update `cmd/server/main.go`:
+Update `cmd/app/main.go`:
 
 Step by step:
 1. Listen for `SIGINT`/`SIGTERM` via `signal.Notify`
@@ -1145,7 +1145,7 @@ Step by step:
 ### 20.3 Generate Swagger Docs
 
 ```bash
-swag init -g cmd/server/main.go -o docs/swagger
+swag init -g cmd/app/main.go -o docs/swagger
 ```
 
 **Verify:** `/swagger/index.html` shows API documentation.
@@ -1272,6 +1272,57 @@ Step by step:
 4. `swagger`, `docker-up`, `docker-down`
 
 **Verify:** `task dev` starts the full development environment.
+
+---
+
+[x] ## Phase 25 — Artisan-style CLI
+
+### 25.1 Rename entrypoint `cmd/server` → `cmd/app`
+
+Step by step:
+1. `git mv cmd/server cmd/app`
+2. Update `Taskfile.yml`, `Dockerfile`, `release.yml`, `README.md`, `docs/*`
+3. `swag init -g cmd/app/main.go`
+
+**Verify:** `go run ./cmd/app` serves; `task build` produces `bin/app`.
+
+### 25.2 CLI framework (cobra)
+
+Step by step:
+1. `go get github.com/spf13/cobra`
+2. Root command: no-arg = server, `--version`/`-v` prints version
+3. Business logic in `internal/console` (cobra stays the shell)
+
+### 25.3 Migration commands
+
+Step by step:
+1. `migrate up|down|version` via `database.RunMigrations`
+2. `migrate status`: table via `database.MigrationList` (applied/current/pending)
+3. `migrate reset`: down + up, tolerating `ErrNoChange`
+4. Confirmations (`--yes`) for destructive commands
+5. `config.LoadCLI()` (DATABASE_URL only) for DB-only commands
+
+### 25.4 Seeding
+
+Step by step:
+1. Seeder registry (`Seeder{Name, Run}`, `Register`/`RunAll`/`RunOne`) in `internal/seed`
+2. `db:seed` (all) / `db:seed <name>`
+3. `db:fresh --yes` (`--no-seed`): drop schema → migrate up → seed
+
+### 25.5 Diagnostics
+
+Step by step:
+1. `config:check`: full load, settings table (masked), live DB/Redis probes
+2. `route:list` (`--json`): uncompiled app via `app.BuildForRoutes`, no DB connection
+
+### 25.6 Codegen
+
+Step by step:
+1. `make:model|dto|repository|service|handler|feature <name>` in `internal/console`
+2. gofmt'd files into `internal/<feature>/`, migration scaffold, wiring checklist
+3. Never overwrite without `--force`
+
+**Verify:** unit tests (`internal/console`), e2e against a throwaway DB, `--help` lists all commands.
 
 ---
 

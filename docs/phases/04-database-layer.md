@@ -18,7 +18,7 @@
 - Gracefully ignores `migrate.ErrNoChange`.
 
 ### 4.4 CLI Subcommand
-- `go run cmd/server/main.go migrate up|down|version` (added in main.go).
+- `go run cmd/app/main.go migrate up|down|version` (added in main.go).
 
 ### 4.5 Migrations (`migrations/`)
 | # | Up | Purpose |
@@ -45,7 +45,7 @@ docker compose up -d db-fiber-boilerplate redis-fiber-boilerplate
 DATABASE_DRIVER=postgres \
 DATABASE_URL="postgres://postgres:postgres@localhost:5433/fiber_boilerplate?sslmode=disable" \
 JWT_SECRET=devsecret \
-go run cmd/server/main.go migrate up
+go run cmd/app/main.go migrate up
 ```
 
 ## Verify

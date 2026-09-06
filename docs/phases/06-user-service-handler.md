@@ -19,7 +19,7 @@
 - Request body parsed → validated → `pkg.ValidationResponse` (422 + field map).
 - Business errors surface through the central `pkg.Error` responder.
 
-### 6.3 Wiring (`cmd/server/main.go`)
+### 6.3 Wiring (`cmd/app/main.go`)
 - `database.NewDatabase` (driver name `postgres` → sql driver `pgx`).
 - Compose repo → service → handler → `server.New(server.Dependencies{UserHandler})`.
 - `server.New` now takes a `Dependencies` struct and registers user routes on `/api/v1`.
@@ -29,7 +29,7 @@
 ```bash
 # start Postgres (docker compose), then:
 DATABASE_DRIVER=postgres DATABASE_URL="postgres://postgres:postgres@localhost:5433/fiber_boilerplate?sslmode=disable" \
-JWT_SECRET=devsecret APP_ENV=development go run cmd/server/main.go
+JWT_SECRET=devsecret APP_ENV=development go run cmd/app/main.go
 
 curl -X POST localhost:8080/api/v1/users -H 'Content-Type: application/json' \
   -d '{"email":"ada@lovelace.dev","name":"Ada Lovelace","password":"supersecret"}'

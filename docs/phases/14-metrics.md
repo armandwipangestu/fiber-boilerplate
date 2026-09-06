@@ -27,7 +27,7 @@
 
 ```bash
 DATABASE_URL='postgres://postgres:postgres@localhost:5433/fiber_boilerplate?sslmode=disable' \
-JWT_SECRET=dev PORT=8080 go run cmd/server/main.go
+JWT_SECRET=dev PORT=8080 go run cmd/app/main.go
 curl -s localhost:8080/ping
 curl -s localhost:8080/metrics | grep http_requests_total
 ```

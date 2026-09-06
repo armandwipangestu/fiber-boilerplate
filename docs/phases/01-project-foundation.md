@@ -9,7 +9,7 @@
 
 ### 1.2 Directory Structure
 ```
-cmd/server/          → application entry point
+cmd/app/          → application entry point
 internal/config/     → environment configuration
 internal/server/     → HTTP server setup (later phases)
 internal/database/   → database connection (later phases)
@@ -31,7 +31,7 @@ logs/                → runtime log files
 ### 1.4 Environment Template (`.env.example`)
 - Documents all config variables with commented defaults.
 
-### 1.5 Entry Point (`cmd/server/main.go`)
+### 1.5 Entry Point (`cmd/app/main.go`)
 - Loads config, prints startup info. HTTP server wired in later phases.
 
 ## How to Reproduce
@@ -41,7 +41,7 @@ logs/                → runtime log files
 go mod init github.com/armandwipangestu/fiber-boilerplate
 
 # 2. Create directories
-mkdir -p cmd/server
+mkdir -p cmd/app
 mkdir -p internal/{config,server,database,cache,middleware,logging,metrics,tracing,health}
 mkdir -p internal/{auth,user,role,permission,rbac,pkg}
 
@@ -49,10 +49,10 @@ mkdir -p internal/{auth,user,role,permission,rbac,pkg}
 go get github.com/gofiber/fiber/v2
 
 # 4. Run
-DATABASE_URL=postgres://postgres:postgres@localhost:5432/fiber_boilerplate JWT_SECRET=secret go run cmd/server/main.go
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/fiber_boilerplate JWT_SECRET=secret go run cmd/app/main.go
 ```
 
 ## Verify
 - `go build ./...` passes.
-- `go run cmd/server/main.go` starts and prints config info.
+- `go run cmd/app/main.go` starts and prints config info.
 - `go test ./internal/config/...` passes validation rules.

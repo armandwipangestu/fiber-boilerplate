@@ -1,0 +1,11 @@
+package {{ .Pkg }}
+
+import "time"
+
+// Domain is the core {{ .Pkg }} model used across the feature.
+type Domain struct {
+	ID        string
+	Name      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}

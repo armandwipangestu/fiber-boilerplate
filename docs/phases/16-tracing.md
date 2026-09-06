@@ -23,7 +23,7 @@
   them in every request log line → trace-to-log correlation in the collector.
 
 ### 16.3 Wiring
-- `cmd/server/main.go` initializes tracing when `OTEL_ENABLED=true` (fail-soft:
+- `cmd/app/main.go` initializes tracing when `OTEL_ENABLED=true` (fail-soft:
   logs and continues without tracing on error); provider shutdown is deferred.
 - Enabled off by default; `.env.example` carries `OTEL_ENABLED`,
   `OTEL_ENDPOINT` (default `http://localhost:4318`), `OTEL_SAMPLE_RATE`.
