@@ -1,3 +1,9 @@
+## [1.0.0-rc.11](https://github.com/armandwipangestu/fiber-boilerplate/compare/v1.0.0-rc.10...v1.0.0-rc.11) (2026-09-06)
+
+### ✨ Features
+
+* artisan-style CLI as the ./app binary ([d65600c](https://github.com/armandwipangestu/fiber-boilerplate/commit/d65600c97cf190363cfe2ec62c60cd39a3f25600))
+
 ## [1.0.0-rc.10](https://github.com/armandwipangestu/fiber-boilerplate/compare/v1.0.0-rc.9...v1.0.0-rc.10) (2026-09-06)
 
 ### ✨ Features
