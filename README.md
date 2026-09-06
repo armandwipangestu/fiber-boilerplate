@@ -113,13 +113,44 @@ only required values are `DATABASE_URL` and `JWT_SECRET`.
 | `PUBLIC_URL`                | `http://localhost:8080`| public base for fallback files   |
 | `OTEL_ENABLED`              | `false`                | OTLP trace export                |
 | `SWAGGER_ENABLED`           | `true`                 | serve Swagger UI (dev only)      |
+| `DEFAULT_ADMIN_EMAIL`       | *(empty)*              | seed this account as admin on startup |
+| `DEFAULT_ADMIN_PASSWORD`    | *(empty)*              | password for the seeded admin    |
 | `RATE_LIMIT_ENABLED`        | `true`                 | per-IP rate limiting             |
 | `SHUTDOWN_TIMEOUT`          | `30s`                  | graceful drain window            |
+
+## Default admin & quick start with Bruno
+
+On startup the server seeds a default admin when `DEFAULT_ADMIN_EMAIL` and
+`DEFAULT_ADMIN_PASSWORD` are set (`.env.example` ships with
+`admin@example.com` / `Admin123!` — **change it before any shared deployment**).
+The account is created with the `admin` role, which owns every permission, so
+you can immediately log in and manage users, roles and permissions. Seeding is
+idempotent: existing accounts are never modified.
+
+The repo ships a ready-made [Bruno](https://www.usebruno.com/) collection in
+`bruno/Fiber Boilerplate/` covering every endpoint. To try the whole API in a
+few minutes:
+
+```bash
+go run ./cmd/server migrate up      # apply migrations
+cp .env.example .env                # seeds admin@example.com on startup
+go run ./cmd/server                 # or: docker compose up -d --build
+```
+
+Then open Bruno → **Collection → Open** → pick `bruno/Fiber Boilerplate` and
+run **Auth → Login** (the post-response script stores the access token, and
+DB-sourced ids like `user_id` are reused across requests). Set `host` and
+credentials in the `development` environment if they differ.
 
 ## API reference
 
 OpenAPI docs are generated from source annotations and served at
-`/swagger` in development. Regenerate them with `task swagger`.
+`/swagger` in development. The spec is embedded in the binary, so the UI and
+`/docs/swagger/swagger.json` work from any working directory — `go run`, a dev
+shell, or a downloaded standalone binary. The UI page itself loads its assets
+from the unpkg CDN (script/style/img sources are allowlisted for that route
+only, while the rest of the API keeps the strict CSP). Regenerate the spec
+with `task swagger`.
 
 Health probes: `GET /health/live` (liveness — always 200), `GET /health/ready`
 and `GET /health` (readiness — 503 when dependencies are down). Metrics:

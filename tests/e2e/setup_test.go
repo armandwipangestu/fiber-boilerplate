@@ -56,6 +56,8 @@ func TestMain(m *testing.M) {
 		RateLimitEnabled:        false,
 		StoragePath:             os.TempDir() + "/fiber-e2e-storage",
 		LogLevel:                "warn",
+		DefaultAdminEmail:       "admin@example.com",
+		DefaultAdminPassword:    "Admin-e2e!",
 	}
 
 	if err := database.RunMigrations(cfg, "up"); err != nil {

@@ -936,6 +936,22 @@ paths:
       summary: Upload or replace a user avatar
       tags:
       - Users
+  /version:
+    get:
+      description: |-
+        Returns the app name and the build version (stamped from the
+        release pipeline, falls back to a dev-<commit> identifier).
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Show build version
+      tags:
+      - System
 securityDefinitions:
   BearerAuth:
     in: header

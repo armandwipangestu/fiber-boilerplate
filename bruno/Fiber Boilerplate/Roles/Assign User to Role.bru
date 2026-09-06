@@ -1,0 +1,26 @@
+meta {
+  name: Assign User to Role
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{host}}/api/v1/roles/{{role_id}}/users
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{access_token}}
+}
+
+body:json {
+  {
+    "user_id": "{{user_id}}"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

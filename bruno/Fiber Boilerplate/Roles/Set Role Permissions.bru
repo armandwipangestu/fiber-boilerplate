@@ -1,0 +1,36 @@
+meta {
+  name: Set Role Permissions
+  type: http
+  seq: 7
+}
+
+put {
+  url: {{host}}/api/v1/roles/{{role_id}}/permissions
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{access_token}}
+}
+
+body:json {
+  {
+    "permission_ids": [
+      ""
+    ]
+  }
+}
+
+script:post-response {
+  const body = res.getBody();
+  const permissionIds = body?.data?.permissions?.map(p => p.id);
+  if (permissionIds && permissionIds.length > 0) {
+    bru.setEnvVar("permission_id", permissionIds[0]);
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -1,0 +1,36 @@
+meta {
+  name: Create Permission
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/api/v1/permissions
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{access_token}}
+}
+
+body:json {
+  {
+    "name": "reports.view",
+    "description": "View reports"
+  }
+}
+
+script:post-response {
+  const body = res.getBody();
+  const permissionId = body?.data?.id;
+
+  if (permissionId) {
+    bru.setEnvVar("permission_id", permissionId);
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

@@ -58,6 +58,9 @@ type Config struct {
 	OTELSampleRate float64
 
 	SwaggerEnabled bool
+
+	DefaultAdminEmail    string
+	DefaultAdminPassword string
 }
 
 func Load() (*Config, error) {
@@ -113,6 +116,9 @@ func Load() (*Config, error) {
 		OTELSampleRate: getEnvFloat("OTEL_SAMPLE_RATE", 1.0),
 
 		SwaggerEnabled: getEnvBool("SWAGGER_ENABLED", true),
+
+		DefaultAdminEmail:    getEnv("DEFAULT_ADMIN_EMAIL", ""),
+		DefaultAdminPassword: getEnv("DEFAULT_ADMIN_PASSWORD", ""),
 	}
 
 	if err := cfg.validate(); err != nil {

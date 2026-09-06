@@ -1,0 +1,20 @@
+meta {
+  name: Unassign User from Role
+  type: http
+  seq: 9
+}
+
+delete {
+  url: {{host}}/api/v1/roles/{{role_id}}/users/{{user_id}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{access_token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

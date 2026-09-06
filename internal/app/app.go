@@ -6,6 +6,7 @@ package app
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/armandwipangestu/fiber-boilerplate/internal/middleware"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/pkg"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/rbac"
+	"github.com/armandwipangestu/fiber-boilerplate/internal/seed"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/server"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/storage"
 	"github.com/armandwipangestu/fiber-boilerplate/internal/tracing"
@@ -43,6 +45,13 @@ func Build(logger *slog.Logger, cfg config.Config) (*Resources, error) {
 	db, err := database.NewDatabase(cfg)
 	if err != nil {
 		return nil, err
+	}
+
+	// Baseline data (e.g. a default admin) for fresh installs. No-op unless
+	// DEFAULT_ADMIN_EMAIL/DEFAULT_ADMIN_PASSWORD are configured.
+	if _, err := seed.DefaultAdmin(context.Background(), db, cfg, logger); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("seed default admin: %w", err)
 	}
 
 	var rdb *redis.Client

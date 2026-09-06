@@ -1,0 +1,20 @@
+meta {
+  name: Get User Permissions
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{host}}/api/v1/users/{{user_id}}/permissions
+  body: none
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{access_token}}
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
